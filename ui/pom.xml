@@ -5,8 +5,8 @@
     <artifactId>ui</artifactId>
     <packaging>jar</packaging>
 
-    <name>OCExplorer UI</name>
-    <description>OCExplorer UI Module</description>
+    <name>OCUS UI</name>
+    <description>OCUS UI Module</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -41,7 +41,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 @RestController
 public class OcdsController extends GenericOCDSController {
 
-    private static final String SERVER_DOMAIN = "http://ocexplorer.dgstg.org";
+    private static final String SERVER_DOMAIN = "http://ocus.dgstg.org";
 
     @Autowired
     private ReleaseRepository releaseRepository;

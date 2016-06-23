@@ -17,8 +17,8 @@
     <artifactId>forms</artifactId>
     <packaging>jar</packaging>
 
-    <name>OCExplorer Forms</name>
-    <description>OCExplorer Forms</description>
+    <name>OCUS Forms</name>
+    <description>OCUS Forms</description>
 
     <parent>
         <groupId>org.devgateway.ocds</groupId>

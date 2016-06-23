@@ -17,8 +17,8 @@
     <artifactId>persistence-mongodb</artifactId>
     <packaging>jar</packaging>
 
-    <name>OCExplorer MongoDB Persistence</name>
-    <description>OCExplorer MongoDB Persistence</description>
+    <name>OCUS MongoDB Persistence</name>
+    <description>OCUS MongoDB Persistence</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

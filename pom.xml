@@ -15,8 +15,8 @@
     <artifactId>oce</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>OCExplorer</name>
-    <description>OCDS General Implementation</description>
+    <name>OCUS</name>
+    <description>OCUS</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,7 +47,7 @@
     </issueManagement>
     <ciManagement>
         <system>Jenkins</system>
-        <url>http://ocexplorer.dgstg.org/ci/</url>
+        <url>http://ocus.dgstg.org/ci/</url>
     </ciManagement>
 
     <scm>

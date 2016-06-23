@@ -12,8 +12,8 @@
     <artifactId>persistence</artifactId>
     <packaging>jar</packaging>
 
-    <name>OCExplorer Persistence</name>
-    <description>OCExplorer Persistence</description>
+    <name>OCUS Persistence</name>
+    <description>OCUS Persistence</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
