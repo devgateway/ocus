@@ -1,4 +1,4 @@
-# Open Contracting Explorer
+# Open Contracting US
 
 For Developers - guidelines to correctly use the gitflow workflow. 
 
