@@ -34,7 +34,7 @@
 
     <parent>
         <groupId>org.devgateway.ocds</groupId>
-        <artifactId>oce</artifactId>
+        <artifactId>ocus</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
