@@ -50,6 +50,7 @@ public class USASpendingImportPage extends BasePage {
     @SpringBean
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+    @SpringBean
     private XMLFile usaSpendingXMLImport;
 
     private LogLabel logText;
@@ -73,13 +74,6 @@ public class USASpendingImportPage extends BasePage {
      */
     public USASpendingImportPage(final PageParameters parameters) {
         super(parameters);
-
-        try {
-            usaSpendingXMLImport = new USASpendingXMLImport(releaseRepository,
-                    new File("/Users/ionut/Downloads/Data_Feed-2.xml"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -125,7 +119,7 @@ public class USASpendingImportPage extends BasePage {
                 target.add(form);
 
                 try {
-                    usaSpendingXMLImport.process();
+                    usaSpendingXMLImport.process(new File("/Users/ionut/Downloads/Data_Feed-2.xml"));
                 } catch (Exception e) {
                     logger.error(e);
                 } finally {

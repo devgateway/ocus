@@ -4,29 +4,21 @@ import org.apache.commons.digester3.binder.AbstractRulesModule;
 import org.apache.log4j.Logger;
 import org.devgateway.ocds.persistence.mongo.Release;
 import org.devgateway.ocds.persistence.mongo.reader.XMLFileImport;
-import org.devgateway.ocds.persistence.mongo.repository.ReleaseRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 
 /**
  * @author idobre
  * @since 6/28/16
  */
+@Service
+@Transactional
 public class USASpendingXMLImport extends XMLFileImport implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(USASpendingXMLImport.class);
 
     private final StringBuffer msgBuffer = new StringBuffer();
-
-    public USASpendingXMLImport(ReleaseRepository releaseRepository, InputStream inputStream) {
-        super(releaseRepository, inputStream);
-    }
-
-    public USASpendingXMLImport(ReleaseRepository releaseRepository, File file) throws IOException {
-        super(releaseRepository, file);
-    }
 
     @Override
     protected Release processRelease(Release release) {
