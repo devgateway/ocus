@@ -5,6 +5,7 @@ import org.apache.commons.digester3.binder.AbstractRulesModule;
 import org.apache.commons.digester3.binder.DigesterLoader;
 import org.devgateway.ocds.persistence.mongo.Release;
 import org.devgateway.ocds.persistence.mongo.repository.ReleaseRepository;
+import org.springframework.scheduling.annotation.Async;
 import org.xml.sax.SAXException;
 
 import java.io.File;
