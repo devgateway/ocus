@@ -22,7 +22,7 @@ public class XMLFileImportTest extends AbstractMongoTest {
     @Autowired
     private ReleaseRepository releaseRepository;
 
-    @Autowired()
+    @Autowired
     @Qualifier("XMLFileImportDefault")
     private XMLFile xmlFile;
 

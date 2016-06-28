@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.devgateway.ocus.forms.wicket.components;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -20,7 +17,7 @@ import java.io.Serializable;
  * @author mpostelnicu
  *
  */
-public class LogLabel extends Label implements IAjaxIndicatorAware {
+public abstract class LogLabel extends Label implements IAjaxIndicatorAware {
 
     private static final int REFRESH_INTERVAL = 5;
 
@@ -94,9 +91,7 @@ public class LogLabel extends Label implements IAjaxIndicatorAware {
         add(selfUpdatingBehavior);
     }
 
-    protected void onPostProcessTarget(final AjaxRequestTarget target) {
-
-    }
+    protected abstract void onPostProcessTarget(final AjaxRequestTarget target);
 
     public AjaxSelfUpdatingTimerBehavior getSelfUpdatingBehavior() {
         return selfUpdatingBehavior;

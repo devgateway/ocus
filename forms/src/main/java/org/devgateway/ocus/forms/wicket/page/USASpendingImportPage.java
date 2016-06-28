@@ -115,7 +115,6 @@ public class USASpendingImportPage extends BasePage {
                 send(getPage(), Broadcast.BREADTH, new EditingDisabledEvent());
                 logText.getSelfUpdatingBehavior().restart(target);
                 importContainer.setVisibilityAllowed(true);
-                target.add(importContainer);
                 target.add(form);
 
                 try {
@@ -123,8 +122,6 @@ public class USASpendingImportPage extends BasePage {
                 } catch (Exception e) {
                     logger.error(e);
                 } finally {
-                    target.add(logText);
-                    target.add(feedbackPanel);
                     this.setEnabled(false);
                     target.add(this);
                 }
@@ -180,10 +177,11 @@ public class USASpendingImportPage extends BasePage {
     }
 
     private void switchFieldsBasedOnExecutorAvailability() {
-        LOGGER.error(">>> threadPoolTaskExecutor.getActiveCount(): " + threadPoolTaskExecutor.getActiveCount());
         boolean enabled = threadPoolTaskExecutor.getActiveCount() == 0;
 
         importContainer.setVisibilityAllowed(!enabled);
         importButton.setEnabled(enabled);
+        dropData.setEnabled(enabled);
+        validateData.setEnabled(enabled);
     }
 }
