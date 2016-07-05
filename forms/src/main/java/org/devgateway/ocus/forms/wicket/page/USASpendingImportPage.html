@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:extend>
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form wicket:id="form" role="form">
+                <div class="form-group">
+                    <div class="row-fluid">
+                        <div wicket:id="dropData"></div>
+                    </div>
+
+                    <div class="row-fluid">
+                        <div wicket:id="validateData"></div>
+                    </div>
+
+                    <div class="row-fluid" wicket:id="importContainer">
+                        Import Log:
+                        <blockquote>
+                            <div wicket:id="logText" class="log-text"></div>
+                            <footer>Refreshed every 5 seconds</footer>
+                        </blockquote>
+                        <i wicket:id="spinner" class="fa fa-cog fa-spin fa-3x fa-fw margin-bottom"></i>
+                    </div>
+                    <div class="row-fluid">
+                        <hr/>
+                    </div>
+
+                    <div class="row-fluid">
+                        <button wicket:id="import" type="button">Import</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</wicket:extend>
+</body>
+</html>
