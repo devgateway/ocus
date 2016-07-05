@@ -80,6 +80,8 @@ public class USASpendingImportPage extends BasePage {
     protected void onInitialize() {
         super.onInitialize();
 
+        usaSpendingXMLImport.newMsgBuffer();
+
         addForm();
         addImportButton();
         addLogText();

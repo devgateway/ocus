@@ -60,6 +60,11 @@ class XMLFileImportDefault extends XMLFileImport {
     }
 
     @Override
+    public void newMsgBuffer() {
+
+    }
+
+    @Override
     public void logMessage(String message) {
 
     }
