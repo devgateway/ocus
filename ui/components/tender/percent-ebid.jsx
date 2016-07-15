@@ -4,14 +4,14 @@ import {pluck} from "../../tools";
 
 export default class BiddingPeriod extends Plot{
   getTitle() {
-    return "Cancelled funding"
+    return "% of tenders using eBid"
   }
 
   getData(){
-    var {data} = this.props;
+    let {data} = this.props;
     return [{
       x: data.map(pluck('year')),
-      y: data.map(pluck('count')),
+      y: data.map(pluck('percentageTendersUsingEbid')),
       type: 'scatter',
       fill: 'tonexty'
     }];
@@ -27,28 +27,12 @@ export default class BiddingPeriod extends Plot{
         }
       },
       yaxis: {
-        title: "Amount",
+        title: "%",
         titlefont: {
           color: "#cc3c3b"
         },
         range: this.props.yAxisRange
       }
     }
-  }
-
-  render(){
-    let {pageHeaderTitle, title, actions} = this.props;
-    return (
-        <section>
-          {pageHeaderTitle &&
-            <h4 className="page-header">
-                {title}
-                  &nbsp;
-                  <button className="btn btn-default btn-sm" onClick={e => actions.toggleCancelledPercents(true)}>%</button>
-            </h4>
-          }
-          <div ref="chartContainer"></div>
-        </section>
-    )
   }
 }
