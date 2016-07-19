@@ -11,33 +11,22 @@
  *******************************************************************************/
 package org.devgateway.toolkit.forms.wicket.styles;
 
-import java.util.List;
-
-import org.apache.wicket.markup.head.HeaderItem;
 import org.apache.wicket.request.resource.CssResourceReference;
 
-import com.google.common.collect.Lists;
-
 /**
- * @author idobre
- * @since 12/2/14
+ * The base CSS for the project.
+ *
+ * TODO: Convert to LESS; Bootstrap also uses LESS.
  */
-
-public class MainCss extends CssResourceReference {
+public class BaseStyles extends CssResourceReference {
 	private static final long serialVersionUID = 1L;
 
-	public static final MainCss INSTANCE = new MainCss();
+	public static final BaseStyles INSTANCE = new BaseStyles();
 
 	/**
 	 * Construct.
 	 */
-	public MainCss() {
-		super(MainCss.class, "main.css");
-	}
-
-	@Override
-	public List<HeaderItem> getDependencies() {
-		final List<HeaderItem> dependencies = Lists.newArrayList(super.getDependencies());
-		return dependencies;
+	public BaseStyles() {
+		super(BaseStyles.class, "BaseStyles.css");
 	}
 }

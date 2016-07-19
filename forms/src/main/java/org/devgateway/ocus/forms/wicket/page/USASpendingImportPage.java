@@ -1,10 +1,7 @@
 package org.devgateway.ocus.forms.wicket.page;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapForm;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.ladda.LaddaAjaxButton;
-import nl.dries.wicket.hibernate.dozer.DozerModel;
+import java.io.File;
+
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeInstantiation;
@@ -21,17 +18,18 @@ import org.apache.wicket.validation.ValidationError;
 import org.devgateway.ocds.persistence.mongo.reader.XMLFile;
 import org.devgateway.ocds.persistence.mongo.repository.ReleaseRepository;
 import org.devgateway.ocus.forms.wicket.components.LogLabel;
-import org.devgateway.ocus.persistence.mongo.spring.USASpendingXMLImport;
 import org.devgateway.toolkit.forms.security.SecurityConstants;
 import org.devgateway.toolkit.forms.wicket.components.form.CheckBoxToggleBootstrapFormComponent;
 import org.devgateway.toolkit.forms.wicket.events.EditingDisabledEvent;
 import org.devgateway.toolkit.forms.wicket.page.BasePage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import java.io.File;
-import java.io.IOException;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapForm;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.ladda.LaddaAjaxButton;
+import nl.dries.wicket.hibernate.dozer.DozerModel;
 
 /**
  * @author idobre
