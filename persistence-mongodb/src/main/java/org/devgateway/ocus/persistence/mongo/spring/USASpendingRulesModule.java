@@ -50,22 +50,34 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         // Tender section
         forPattern("response/result/doc/agencyid")
-                .createObject().ofType("org.devgateway.ocds.persistence.mongo.Tender")
-                .then().addRule(new Rule() {
-            @Override
-            public void body(String namespace, String name, String text) throws Exception {
-                if (!StringUtils.isEmpty(text)) {
-                    // get the object from top of the stack
-                    Tender tender = getDigester().peek();
-                    Organization procuringEntity = new Organization();
-                    Identifier identifier = new Identifier();
-                    identifier.setLegalName(text);
-                    procuringEntity.setIdentifier(identifier);
-                    tender.setProcuringEntity(procuringEntity);
-                }
-            }
-        })
-                .then().setNext("setTender");
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
+                            Organization procuringEntity = tender.getProcuringEntity();
+                            if (procuringEntity == null) {
+                                procuringEntity = new Organization();
+                                tender.setProcuringEntity(procuringEntity);
+                            }
+
+                            Identifier identifier = procuringEntity.getIdentifier();
+                            if (identifier == null) {
+                                identifier = new Identifier();
+                                procuringEntity.setIdentifier(identifier);
+                            }
+                            identifier.setLegalName(text);
+                        }
+                    }
+                });
 
         forPattern("response/result/doc/solicitationprocedures")
                 .addRule(new Rule() {
@@ -74,8 +86,15 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         if (!StringUtils.isEmpty(text)) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
                             // TODO - check OCE-45 and OCE-7 comments
-                            release.getTender().setProcurementMethod(null);
+                            tender.setProcurementMethod(null);
                         }
                     }
                 });
@@ -87,8 +106,15 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         if (!StringUtils.isEmpty(text)) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
                             // TODO - check OCE-45 and OCE-7 comments
-                            release.getTender().setProcurementMethod(null);
+                            tender.setProcurementMethod(null);
                         }
                     }
                 });
@@ -102,8 +128,15 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         if (!StringUtils.isEmpty(text)) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
                             // TODO - check OCE-45 and OCE-7 comments
-                            release.getTender().setProcurementMethod(null);
+                            tender.setProcurementMethod(null);
                         }
                     }
                 });
@@ -115,8 +148,15 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         if (!StringUtils.isEmpty(text)) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
                             // TODO - check OCE-45 and OCE-7 comments
-                            release.getTender().setProcurementMethod(null);
+                            tender.setProcurementMethod(null);
                         }
                     }
                 });
@@ -128,7 +168,14 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         if (!StringUtils.isEmpty(text)) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
-                            release.getTender().setNumberOfTenderers(Integer.valueOf(text));
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
+                            tender.setNumberOfTenderers(Integer.valueOf(text));
                         }
                     }
                 });
@@ -140,8 +187,15 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         if (!StringUtils.isEmpty(text)) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
+                            Tender tender = release.getTender();
+
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
+
                             // TODO - check OCE-46 and OCE-7 comments
-                            release.getTender().setProcurementMethod(null);
+                            tender.setProcurementMethod(null);
                         }
                     }
                 });
