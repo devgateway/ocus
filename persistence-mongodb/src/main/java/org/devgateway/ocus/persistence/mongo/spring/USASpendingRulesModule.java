@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.devgateway.ocds.persistence.mongo.*;
 import org.devgateway.ocds.persistence.mongo.constants.MongoConstants;
+import org.devgateway.ocus.persistence.mongo.spring.constants.USASpendingConstants;
 import org.springframework.security.access.method.P;
 
 import java.math.BigDecimal;
@@ -79,46 +80,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
-        forPattern("response/result/doc/solicitationprocedures")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Tender tender = release.getTender();
-
-                            if (tender == null) {
-                                tender = new Tender();
-                                release.setTender(tender);
-                            }
-
-                            // TODO - check OCE-45 and OCE-7 comments
-                            tender.setProcurementMethod(null);
-                        }
-                    }
-                });
-
-        forPattern("response/result/doc/typeofsetaside")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Tender tender = release.getTender();
-
-                            if (tender == null) {
-                                tender = new Tender();
-                                release.setTender(tender);
-                            }
-
-                            // TODO - check OCE-45 and OCE-7 comments
-                            tender.setProcurementMethod(null);
-                        }
-                    }
-                });
-
         // contractingofficeagencyid  - using only agencyid based on spreadsheet
 
         forPattern("response/result/doc/extentcompeted")
@@ -135,28 +96,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 release.setTender(tender);
                             }
 
-                            // TODO - check OCE-45 and OCE-7 comments
-                            tender.setProcurementMethod(null);
-                        }
-                    }
-                });
-
-        forPattern("response/result/doc/multipleorsingleawardidc")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Tender tender = release.getTender();
-
-                            if (tender == null) {
-                                tender = new Tender();
-                                release.setTender(tender);
-                            }
-
-                            // TODO - check OCE-45 and OCE-7 comments
-                            tender.setProcurementMethod(null);
+                            // check OCE-45 for the mapping
+                            tender.setProcurementMethod(
+                                    USASpendingConstants.ExtentCompeted.extentCompetedMapping.get(text));
                         }
                     }
                 });
@@ -195,7 +137,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             }
 
                             // TODO - check OCE-46 and OCE-7 comments
-                            tender.setProcurementMethod(null);
+                            // tender.setProcurementMethod(null);
                         }
                     }
                 });
