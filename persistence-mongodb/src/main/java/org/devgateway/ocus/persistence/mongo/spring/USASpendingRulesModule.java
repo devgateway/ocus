@@ -136,8 +136,8 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 release.setTender(tender);
                             }
 
-                            // TODO - check OCE-46 and OCE-7 comments
-                            // tender.setProcurementMethod(null);
+                            // check OCE-46
+                            tender.setProcurementMethodRationale(text);
                         }
                     }
                 });
