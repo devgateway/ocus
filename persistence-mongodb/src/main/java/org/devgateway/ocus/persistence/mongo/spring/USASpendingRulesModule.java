@@ -2,22 +2,18 @@ package org.devgateway.ocus.persistence.mongo.spring;
 
 import org.apache.commons.digester3.Rule;
 import org.apache.commons.digester3.binder.AbstractRulesModule;
-import org.apache.commons.digester3.binder.ByRuleBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.devgateway.ocds.persistence.mongo.*;
 import org.devgateway.ocds.persistence.mongo.constants.MongoConstants;
+import org.devgateway.ocus.persistence.mongo.USAItem;
 import org.devgateway.ocus.persistence.mongo.spring.constants.USASpendingConstants;
-import org.springframework.security.access.method.P;
 
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.TimeZone;
 
 /**
  * @author idobre
@@ -79,8 +75,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
-
-        // contractingofficeagencyid  - using only agencyid based on spreadsheet
 
         forPattern("response/result/doc/extentcompeted")
                 .addRule(new Rule() {
@@ -156,12 +150,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
-
-        // vendordoingasbusinessname  - supplier.name (alternate)
-        // forPattern("response/result/doc/vendordoingasbusinessname").setBeanProperty().withName("id");
-
-        // vendoralternatename  - supplier.name (alternate)
-        // forPattern("response/result/doc/vendoralternatename").setBeanProperty().withName("id");
 
         forPattern("response/result/doc/dunsnumber")
                 .addRule(new Rule() {
@@ -366,6 +354,46 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
+        forPattern("response/result/doc/streetaddress2")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setStreetAddress(address.getStreetAddress() + "\n" + text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/streetaddress3")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setStreetAddress(address.getStreetAddress() + "\n" + text);
+                        }
+                    }
+                });
+
         // congressionaldistrict - award:suppliers:address:congressionalDistrict
         // forPattern("response/result/doc/congressionaldistrict").setBeanProperty().withName("id");
 
@@ -389,6 +417,26 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
+        forPattern("response/result/doc/principalnaicscode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Item item = getFirstItemAward(award);
+
+                            Classification classification = item.getClassification();
+                            if (classification == null) {
+                                classification = new Classification();
+                                item.setClassification(classification);
+                            }
+                            classification.setId(text);
+                        }
+                    }
+                });
+
         forPattern("response/result/doc/piid")
                 .addRule(new Rule() {
                     @Override
@@ -402,26 +450,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
-        forPattern("response/result/doc/principalnaicscode")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Contract contract = getFirstContract(release);
-                            Item item = getFirstItem(contract);
-
-                            Classification classification = item.getClassification();
-                            if (classification == null) {
-                                classification = new Classification();
-                                item.setClassification(classification);
-                            }
-                            classification.setId(text);
-                        }
-                    }
-                });
-
         forPattern("response/result/doc/descriptionofcontractrequirement")
                 .addRule(new Rule() {
                     @Override
@@ -430,7 +458,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
                             Contract contract = getFirstContract(release);
-                            Item item = getFirstItem(contract);
+                            Item item = getFirstItemContract(contract);
 
                             Classification classification = item.getClassification();
                             if (classification == null) {
@@ -485,6 +513,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             Contract contract = getFirstContract(release);
 
                             DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                            dateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
                             contract.setDateSigned(dateFormat.parse(text));
                         }
                     }
@@ -506,6 +535,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             }
 
                             DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                            dateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
                             period.setStartDate(dateFormat.parse(text));
                         }
                     }
@@ -527,6 +557,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             }
 
                             DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                            dateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
                             period.setEndDate(dateFormat.parse(text));
                         }
                     }
@@ -583,17 +614,66 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
-        /*
-        // placeofperformancecity  - location.deliveryAddress.locality
-        forPattern("response/result/doc/placeofperformancecity").setBeanProperty().withName("id");
 
-        // placeofperformancecountrycode  - location.deliveryAddress.countryName
-        forPattern("response/result/doc/placeofperformancecountrycode").setBeanProperty().withName("id");
+        forPattern("response/result/doc/PlaceofPerformanceCity")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            USAItem item = (USAItem) getFirstItemContract(contract);
 
-        // placeofperformancezipcode  - location.deliveryAddress.postalCode
-        forPattern("response/result/doc/placeofperformancezipcode").setBeanProperty().withName("id");
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setLocality(text);
+                        }
+                    }
+                });
 
-        */
+        forPattern("response/result/doc/placeofperformancecountrycode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            USAItem item = (USAItem) getFirstItemContract(contract);
+
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setCountryName(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/placeofperformancezipcode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            USAItem item = (USAItem) getFirstItemContract(contract);
+
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setPostalCode(text);
+                        }
+                    }
+                });
     }
 
     private Award getFirstAward(Release release) {
@@ -644,7 +724,23 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         return contract;
     }
 
-    private Item getFirstItem(Contract contract) {
+    private Item getFirstItemAward(Award award) {
+        Item item = null;
+        Set<Item> items = award.getItems();
+
+        if (items.iterator().hasNext()) {
+            item = items.iterator().next();
+        }
+
+        if (item == null) {
+            item = new USAItem();
+            items.add(item);
+        }
+
+        return item;
+    }
+
+    private Item getFirstItemContract(Contract contract) {
         Item item = null;
         Set<Item> items = contract.getItems();
 
@@ -653,7 +749,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         }
 
         if (item == null) {
-            item = new Item();
+            item = new USAItem();
             items.add(item);
         }
 
