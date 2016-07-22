@@ -75,7 +75,6 @@ public class TestForm extends AbstractAuditableEntity implements Serializable {
 	private Set<FileMetadata> fileInput;
 
 	public TestForm() {
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
