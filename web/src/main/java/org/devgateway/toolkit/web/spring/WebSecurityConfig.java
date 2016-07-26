@@ -69,13 +69,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				"/api/ocds/location/all/**", "/api/ocds/location/search/**", "/api/averageNumberOfTenderers/**",
 				"/api/percentTendersCancelled/**", "/api/percentTendersUsingEBid/**",
 				"/api/qualityAverageTenderPeriod/**", "/api/qualityAverageAwardPeriod/**",
-				"/api/fundingByTenderDeliveryLocation/**"};
+				"/api/fundingByTenderDeliveryLocation/**", "/api/percentTendersAwardedWithTwoOrMoreTenderers/**",
+				"/api/percentTendersWithTwoOrMoreTenderers/**" };
 	}
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring().antMatchers("/", "/home", "/v2/api-docs/**", "/swagger-ui.html**", "/webjars/**", "/images/**",
-				"/configuration/**", "/swagger-resources/**").antMatchers(allowedApiEndpoints());
+				"/configuration/**", "/swagger-resources/**", "/dashboard").antMatchers(allowedApiEndpoints());
 
 	}
 
