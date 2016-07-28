@@ -118,7 +118,7 @@ public class USASpendingImportPage extends BasePage {
                 target.add(form);
 
                 try {
-                    usaSpendingXMLImport.process(new File("/Users/ionut/Downloads/Data_Feed-2.xml"));
+                    usaSpendingXMLImport.process(new File("/opt/Data_Feed.xml"));
                 } catch (Exception e) {
                     logger.error(e);
                 } finally {

@@ -2,9 +2,18 @@ package org.devgateway.ocus.persistence.mongo.spring;
 
 import org.apache.commons.digester3.Rule;
 import org.apache.commons.digester3.binder.AbstractRulesModule;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.devgateway.ocds.persistence.mongo.Release;
+import org.devgateway.ocds.persistence.mongo.*;
 import org.devgateway.ocds.persistence.mongo.constants.MongoConstants;
+import org.devgateway.ocus.persistence.mongo.USAItem;
+import org.devgateway.ocus.persistence.mongo.spring.constants.USASpendingConstants;
+
+import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * @author idobre
@@ -22,7 +31,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         forPattern("response/result/doc/unique_transaction_id").addRule(new Rule() {
             @Override
             public void body(String namespace, String name, String text) throws Exception {
-                if (text != null) {
+                if (!StringUtils.isEmpty(text)) {
                     // get the object from top of the stack, it should be a Release object
                     Release release = getDigester().peek();
                     release.setOcid(MongoConstants.OCDS_PREFIX + text);
@@ -35,158 +44,731 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                 .createObject().ofType("org.devgateway.ocds.persistence.mongo.Organization")
                 .then().setBeanProperty().withName("name")
                 .then().setNext("setBuyer");
-        /*
 
+        // Tender section
+        forPattern("response/result/doc/agencyid")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Tender tender = release.getTender();
 
-        // solicitationid  - tender.id
-        forPattern("response/result/doc/solicitationid").setBeanProperty().withName("id");
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
 
-        // idvagencyid  - tender.id (framework ID)
-        forPattern("response/result/doc/idvagencyid").setBeanProperty().withName("id");
+                            Organization procuringEntity = tender.getProcuringEntity();
+                            if (procuringEntity == null) {
+                                procuringEntity = new Organization();
+                                tender.setProcuringEntity(procuringEntity);
+                            }
 
-        // solicitationprocedures  - tender.procurementMethod.details
-        forPattern("response/result/doc/solicitationprocedures").setBeanProperty().withName("id");
+                            Identifier identifier = procuringEntity.getIdentifier();
+                            if (identifier == null) {
+                                identifier = new Identifier();
+                                procuringEntity.setIdentifier(identifier);
+                            }
+                            identifier.setLegalName(text);
+                        }
+                    }
+                });
 
-        // typeofsetaside  - tender.procurementMethod.details
-        forPattern("response/result/doc/typeofsetaside").setBeanProperty().withName("id");
+        forPattern("response/result/doc/extentcompeted")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Tender tender = release.getTender();
 
-        // tender.procuringEntity
-        forPattern("response/result/doc/agencyid").setBeanProperty().withName("id");
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
 
-        // contractingofficeagencyid  - tender.procuringEntity
-        forPattern("response/result/doc/contractingofficeagencyid").setBeanProperty().withName("id");
+                            // check OCE-45 for the mapping
+                            tender.setProcurementMethod(
+                                    USASpendingConstants.ExtentCompeted.extentCompetedMapping.get(text));
+                        }
+                    }
+                });
 
-        // extentcompeted - tender.procurementMethod
-        forPattern("response/result/doc/extentcompeted").setBeanProperty().withName("id");
+        forPattern("response/result/doc/numberofoffersreceived")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Tender tender = release.getTender();
 
-        // multipleorsingleawardidc  - tender.procurementMethod
-        forPattern("response/result/doc/multipleorsingleawardidc").setBeanProperty().withName("id");
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
 
-        // numberofoffersreceived  - tender.numberOfTenderers
-        forPattern("response/result/doc/numberofoffersreceived").setBeanProperty().withName("id");
+                            tender.setNumberOfTenderers(Integer.valueOf(text));
+                        }
+                    }
+                });
 
-        // reasonnotcompeted  - tender.procurementMethod.rationale
-        forPattern("response/result/doc/reasonnotcompeted").setBeanProperty().withName("id");
+        forPattern("response/result/doc/reasonnotcompeted")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Tender tender = release.getTender();
 
+                            if (tender == null) {
+                                tender = new Tender();
+                                release.setTender(tender);
+                            }
 
+                            // check OCE-46
+                            tender.setProcurementMethodRationale(text);
+                        }
+                    }
+                });
 
+        forPattern("response/result/doc/vendorname")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
 
+                            supplier.setName(text);
+                        }
+                    }
+                });
 
-        // vendorname - supplier.name
-        forPattern("response/result/doc/vendorname").setBeanProperty().withName("id");
+        forPattern("response/result/doc/dunsnumber")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
 
-        // vendordoingasbusinessname  - supplier.name (alternate)
-        forPattern("response/result/doc/vendordoingasbusinessname").setBeanProperty().withName("id");
+                            Identifier identifier = supplier.getIdentifier();
+                            if (identifier == null) {
+                                identifier = new Identifier();
+                                supplier.setIdentifier(identifier);
+                            }
+                            identifier.setId(text);
+                        }
+                    }
+                });
 
-         // vendoralternatename  - supplier.name (alternate)
-        forPattern("response/result/doc/vendoralternatename").setBeanProperty().withName("id");
+        forPattern("response/result/doc/vendorlegalorganizationname")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
 
-        // dunsnumber - supplier.identifier.id
-        forPattern("response/result/doc/dunsnumber").setBeanProperty().withName("id");
-
-        // vendorlegalorganizationname  - supplier.identifier.legalName
-        forPattern("response/result/doc/vendorlegalorganizationname").setBeanProperty().withName("id");
+                            Identifier identifier = supplier.getIdentifier();
+                            if (identifier == null) {
+                                identifier = new Identifier();
+                                supplier.setIdentifier(identifier);
+                            }
+                            identifier.setLegalName(text);
+                        }
+                    }
+                });
 
         // organizationaltype  - awards.supplier.additionalIdentifiers
-        forPattern("response/result/doc/organizationaltype").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/organizationaltype").setBeanProperty().withName("id");
 
-        // faxno  - supplier.contactPoint.faxNumber
-        forPattern("response/result/doc/faxno").setBeanProperty().withName("id");
+        forPattern("response/result/doc/faxno")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
 
-        // phoneno  - supplier.contactPoint.telephone
-        forPattern("response/result/doc/phoneno").setBeanProperty().withName("id");
+                            ContactPoint contactPoint = supplier.getContactPoint();
+                            if (contactPoint == null) {
+                                contactPoint = new ContactPoint();
+                                supplier.setContactPoint(contactPoint);
+                            }
+                            contactPoint.setFaxNumber(text);
+                        }
+                    }
+                });
 
-        // divisionname - award:suppliers:contactPoint:name
-        forPattern("response/result/doc/divisionname").setBeanProperty().withName("id");
+        forPattern("response/result/doc/phoneno")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
 
-        // city - award:suppliers:address:locality
-        forPattern("response/result/doc/city").setBeanProperty().withName("id");
+                            ContactPoint contactPoint = supplier.getContactPoint();
+                            if (contactPoint == null) {
+                                contactPoint = new ContactPoint();
+                                supplier.setContactPoint(contactPoint);
+                            }
+                            contactPoint.setTelephone(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/divisionname")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            ContactPoint contactPoint = supplier.getContactPoint();
+                            if (contactPoint == null) {
+                                contactPoint = new ContactPoint();
+                                supplier.setContactPoint(contactPoint);
+                            }
+                            contactPoint.setName(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/city")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setLocality(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/vendorcountrycode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setCountryName(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/zipcode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setPostalCode(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/state")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setRegion(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/streetaddress")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setStreetAddress(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/streetaddress2")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setStreetAddress(address.getStreetAddress() + "\n" + text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/streetaddress3")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Organization supplier = getFirstSupplier(award);
+
+                            Address address = supplier.getAddress();
+                            if (address == null) {
+                                address = new Address();
+                                supplier.setAddress(address);
+                            }
+                            address.setStreetAddress(address.getStreetAddress() + "\n" + text);
+                        }
+                    }
+                });
 
         // congressionaldistrict - award:suppliers:address:congressionalDistrict
-        forPattern("response/result/doc/congressionaldistrict").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/congressionaldistrict").setBeanProperty().withName("id");
 
-        // vendorcountrycode  - supplier.address.countryName
-        forPattern("response/result/doc/vendorcountrycode").setBeanProperty().withName("id");
+        forPattern("response/result/doc/baseandalloptionsvalue")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
 
-        // zipcode  - supplier.address.postalCode
-        forPattern("response/result/doc/zipcode").setBeanProperty().withName("id");
+                            Amount amount = award.getValue();
+                            if (amount == null) {
+                                amount = new Amount();
+                                award.setValue(amount);
+                            }
+                            amount.setAmount(new BigDecimal(text));
+                            amount.setCurrency("USD");
+                        }
+                    }
+                });
 
-        // state - supplier.address.region
-        forPattern("response/result/doc/state").setBeanProperty().withName("id");
+        forPattern("response/result/doc/principalnaicscode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Item item = getFirstItemAward(award);
 
-        // streetaddress  - supplier.address.streetAddress
-        forPattern("response/result/doc/streetaddress").setBeanProperty().withName("id");
+                            Classification classification = item.getClassification();
+                            if (classification == null) {
+                                classification = new Classification();
+                                item.setClassification(classification);
+                            }
+                            classification.setId(text);
+                        }
+                    }
+                });
 
-        // streetaddress2  - supplier.address.streetAddress
-        forPattern("response/result/doc/streetaddress2").setBeanProperty().withName("id");
+        forPattern("response/result/doc/piid")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            contract.setId(text);
+                        }
+                    }
+                });
 
-        // streetaddress3  - supplier.address.streetAddress
-        forPattern("response/result/doc/streetaddress3").setBeanProperty().withName("id");
+        forPattern("response/result/doc/descriptionofcontractrequirement")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            Item item = getFirstItemContract(contract);
 
-        //award.amount
-        forPattern("response/result/doc/baseandalloptionsvalue").setBeanProperty().withName("id");
-
-
-
-
-
-        // piid  - contract.id
-        forPattern("response/result/doc/piid").setBeanProperty().withName("id");
-
-        // principalnaicscode - items.classification.id
-        forPattern("response/result/doc/principalnaicscode").setBeanProperty().withName("id");
-
-        // descriptionofcontractrequirement  - contracts:item:description
-        forPattern("response/result/doc/descriptionofcontractrequirement").setBeanProperty().withName("id");
+                            Classification classification = item.getClassification();
+                            if (classification == null) {
+                                classification = new Classification();
+                                item.setClassification(classification);
+                            }
+                            classification.setDescription(text);
+                        }
+                    }
+                });
 
         // productorservicecode  - items.additionalClassifications
-        forPattern("response/result/doc/productorservicecode").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/productorservicecode").setBeanProperty().withName("id");
 
         // placeofmanufacture  - contracts:item:additionalClassifications
-        forPattern("response/result/doc/placeofmanufacture").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/placeofmanufacture").setBeanProperty().withName("id");
 
         // countryoforigin  - contracts:item:additionalClassifications
-        forPattern("response/result/doc/countryoforigin").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/countryoforigin").setBeanProperty().withName("id");
 
         // systemequipmentcode  - contracts:item:additionalClassifications
-        forPattern("response/result/doc/systemequipmentcode").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/systemequipmentcode").setBeanProperty().withName("id");
 
-        // reasonformodification  - contract.amendment.rationale
-        forPattern("response/result/doc/reasonformodification").setBeanProperty().withName("id");
+        forPattern("response/result/doc/reasonformodification")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
 
-        // signeddate  - contract.dateSigned
-        forPattern("response/result/doc/signeddate").setBeanProperty().withName("id");
+                            Amendment amendment = contract.getAmendment();
+                            if (amendment == null) {
+                                amendment = new Amendment();
+                                contract.setAmendment(amendment);
+                            }
 
-        // effectivedate  - contract.period.startDate
-        forPattern("response/result/doc/effectivedate").setBeanProperty().withName("id");
+                            amendment.setRationale(text);
+                        }
+                    }
+                });
 
-        // currentcompletiondate - contract.period.endDate
-        forPattern("response/result/doc/currentcompletiondate").setBeanProperty().withName("id");
+
+        forPattern("response/result/doc/signeddate")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+
+                            DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                            dateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                            contract.setDateSigned(dateFormat.parse(text));
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/effectivedate")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+
+                            Period period = contract.getPeriod();
+                            if (period == null) {
+                                period = new Period();
+                                contract.setPeriod(period);
+                            }
+
+                            DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                            dateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                            period.setStartDate(dateFormat.parse(text));
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/currentcompletiondate")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+
+                            Period period = contract.getPeriod();
+                            if (period == null) {
+                                period = new Period();
+                                contract.setPeriod(period);
+                            }
+
+                            DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                            dateFormat.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+                            period.setEndDate(dateFormat.parse(text));
+                        }
+                    }
+                });
 
         // ultimatecompletiondate  - contract.period.endDate (actual)
-        forPattern("response/result/doc/ultimatecompletiondate").setBeanProperty().withName("id");
+        // forPattern("response/result/doc/ultimatecompletiondate").setBeanProperty().withName("id");
 
-        // contract.amount
-        forPattern("response/result/doc/baseandexercisedoptionsvalue").setBeanProperty().withName("id");
+        forPattern("response/result/doc/baseandexercisedoptionsvalue")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+
+                            Amount amount = contract.getValue();
+                            if (amount == null) {
+                                amount = new Amount();
+                                contract.setValue(amount);
+                            }
+                            amount.setCurrency("USD");
+                            amount.setAmount(new BigDecimal(text));
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/dollarsobligated")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+
+                            Implementation implementation = contract.getImplementation();
+                            if (implementation == null) {
+                                implementation = new Implementation();
+                                contract.setImplementation(implementation);
+                            }
+
+                            Transaction transaction = getFirstTransaction(implementation);
+
+                            Amount amount = transaction.getAmount();
+                            if (amount == null) {
+                                amount = new Amount();
+                                transaction.setAmount(amount);
+                            }
+                            amount.setCurrency("USD");
+                            amount.setAmount(new BigDecimal(text));
+                        }
+                    }
+                });
 
 
+        forPattern("response/result/doc/PlaceofPerformanceCity")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            USAItem item = (USAItem) getFirstItemContract(contract);
 
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setLocality(text);
+                        }
+                    }
+                });
 
+        forPattern("response/result/doc/placeofperformancecountrycode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            USAItem item = (USAItem) getFirstItemContract(contract);
 
-        // dollarsobligated - implementation.transaction.amount
-        forPattern("response/result/doc/dollarsobligated").setBeanProperty().withName("id");
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setCountryName(text);
+                        }
+                    }
+                });
 
+        forPattern("response/result/doc/placeofperformancezipcode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Contract contract = getFirstContract(release);
+                            USAItem item = (USAItem) getFirstItemContract(contract);
 
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setPostalCode(text);
+                        }
+                    }
+                });
+    }
 
-        // placeofperformancecity  - location.deliveryAddress.locality
-        forPattern("response/result/doc/placeofperformancecity").setBeanProperty().withName("id");
+    private Award getFirstAward(Release release) {
+        Award award = null;
+        Set<Award> awards = release.getAwards();
 
-        // placeofperformancecountrycode  - location.deliveryAddress.countryName
-        forPattern("response/result/doc/placeofperformancecountrycode").setBeanProperty().withName("id");
+        if (awards.iterator().hasNext()) {
+            award = awards.iterator().next();
+        }
 
-        // placeofperformancezipcode  - location.deliveryAddress.postalCode
-        forPattern("response/result/doc/placeofperformancezipcode").setBeanProperty().withName("id");
+        if (award == null) {
+            award = new Award();
+            awards.add(award);
+        }
 
-        */
+        return award;
+    }
+
+    private Organization getFirstSupplier(Award award) {
+        Organization supplier = null;
+        Set<Organization> suppliers = award.getSuppliers();
+
+        if (suppliers.iterator().hasNext()) {
+            supplier = suppliers.iterator().next();
+        }
+
+        if (supplier == null) {
+            supplier = new Organization();
+            suppliers.add(supplier);
+        }
+
+        return supplier;
+    }
+
+    private Contract getFirstContract(Release release) {
+        Contract contract = null;
+        Set<Contract> contracts = release.getContracts();
+
+        if (contracts.iterator().hasNext()) {
+            contract = contracts.iterator().next();
+        }
+
+        if (contract == null) {
+            contract = new Contract();
+            contracts.add(contract);
+        }
+
+        return contract;
+    }
+
+    private Item getFirstItemAward(Award award) {
+        Item item = null;
+        Set<Item> items = award.getItems();
+
+        if (items.iterator().hasNext()) {
+            item = items.iterator().next();
+        }
+
+        if (item == null) {
+            item = new USAItem();
+            items.add(item);
+        }
+
+        return item;
+    }
+
+    private Item getFirstItemContract(Contract contract) {
+        Item item = null;
+        Set<Item> items = contract.getItems();
+
+        if (items.iterator().hasNext()) {
+            item = items.iterator().next();
+        }
+
+        if (item == null) {
+            item = new USAItem();
+            items.add(item);
+        }
+
+        return item;
+    }
+
+    private Transaction getFirstTransaction(Implementation implementation) {
+        Transaction transaction = null;
+        Set<Transaction> transactions = implementation.getTransactions();
+
+        if (transactions.iterator().hasNext()) {
+            transaction = transactions.iterator().next();
+        }
+
+        if (transaction == null) {
+            transaction = new Transaction();
+            transactions.add(transaction);
+        }
+
+        return transaction;
     }
 }

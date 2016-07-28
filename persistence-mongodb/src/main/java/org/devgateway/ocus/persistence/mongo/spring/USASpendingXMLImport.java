@@ -39,10 +39,6 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
             releaseCount = 0;
         }
 
-        // LOGGER.error(">>>>> release: " + release);
-        // if (Integer.parseInt(release.getId()) % 1000 == 0) {
-        //     LOGGER.error(">>>>> " + release.getOcid());
-        // }
         return release;
     }
 
