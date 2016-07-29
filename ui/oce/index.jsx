@@ -63,26 +63,14 @@ export default class OCApp extends React.Component{
     this.fetchBidTypes();
 
     this.setState({
-      width: document.querySelector('.years-bar').offsetWidth
+      width: document.querySelector('.years-bar').offsetWidth - 30
     });
 
     window.addEventListener("resize", debounce(() => {
       this.setState({
-        width: document.querySelector('.years-bar').offsetWidth
+        width: document.querySelector('.years-bar').offsetWidth - 30
       });
     }));
-  }
-
-  setMenuBox(e, slug){
-    let {menuBox} = this.state;
-    e.stopPropagation();
-    this.setState({menuBox: menuBox == slug ? "" : slug})
-  }
-
-  filters(){
-    return <div className="filters">
-      <img className="top-nav-icon" src="assets/icons/filter.svg"/> {this.__('Filter the data')} <i className="glyphicon glyphicon-menu-down"></i>
-    </div>
   }
 
   setMenuBox(e, slug){
@@ -129,7 +117,7 @@ export default class OCApp extends React.Component{
     </div>;
   }
 
-  navigationLink({name, icon}, index){
+  navigationLink({getName, icon}, index){
     return <a href="javascript:void(0);" key={index}
               className={cn("col-sm-12", {active: index == this.state.currentTab})}
               onClick={_ => this.setState({currentTab: index})}>
@@ -138,7 +126,7 @@ export default class OCApp extends React.Component{
             <i className={`glyphicon glyphicon-${icon}`}/>
           </span>
       &nbsp;
-      {name(this.__.bind(this))}
+      {getName(this.__.bind(this))}
     </a>
   }
 
@@ -214,21 +202,32 @@ export default class OCApp extends React.Component{
 
   downloadExcel(){
     this.setState({exporting: true});
-    fetch('/api/ocds/excelExport', {
+    let isSafari = navigator.userAgent.indexOf("Safari");
+    let url = new URI('/api/ocds/excelExport').addSearch(this.state.filters.toJS())//.addSearch('year', this.state.selectedYears.toArray());
+    if(isSafari){
+      window.open(url, "_blank");
+      this.setState({exporting: false});
+      return;
+    }
+    fetch(url.clone().query(""), {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify(this.state.filters)
-    }).then(callFunc('blob')).then(blob => {
-      var link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = "export.xls";
-      link.click();
-      this.setState({exporting: false})
+      body: url.query()
+    }).then(response => {
+      let [_, filename] = response.headers.get('Content-Disposition').split("filename=");
+      response.blob().then(blob => {
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        this.setState({exporting: false})
+      });
+      return response;
     }).catch((...args) => {
-      alert(this.__("An error occured during exporting!"));
+      alert(this.__("An error occurred during export!"));
       this.setState({exporting: false})
     });
   }
