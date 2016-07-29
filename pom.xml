@@ -21,11 +21,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-		<liquibase.version>3.5.1</liquibase.version>
-		<spring.boot.version>1.3.6.RELEASE</spring.boot.version>
+        <liquibase.version>3.5.1</liquibase.version>
+        <spring.boot.version>1.3.6.RELEASE</spring.boot.version>
         <derby.version>10.12.1.1</derby.version>
         <hibernate.core.version>4.3.11.Final</hibernate.core.version>
-		<mongo.version>3.2.2</mongo.version>
+        <mongo.version>3.2.2</mongo.version>
     </properties>
 
     <modules>
@@ -70,6 +70,7 @@
     </distributionManagement>
 
     <repositories>
+
         <repository>
             <id>OCVN</id>
             <name>OCVN</name>
@@ -103,15 +104,15 @@
     </dependencies>
 
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.mongodb</groupId>
-				<artifactId>mongo-java-driver</artifactId>
-				<version>${mongo.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongo-java-driver</artifactId>
+                <version>${mongo.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -165,14 +166,14 @@
                 </configuration>
             </plugin>
         </plugins>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.5.1</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 </project>
