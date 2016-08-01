@@ -35,6 +35,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     // get the object from top of the stack, it should be a Release object
                     Release release = getDigester().peek();
                     release.setOcid(MongoConstants.OCDS_PREFIX + text);
+
+                    // also set the Tag
+                    release.getTag().add(Tag.award);
                 }
             }
         });
