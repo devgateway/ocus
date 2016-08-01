@@ -34,7 +34,7 @@ public class ReleaseExportFileTest {
         Assert.assertNotNull("release sheet", workbook.getSheet("release"));
         Assert.assertNotNull("tender sheet", workbook.getSheet("tender"));
         Assert.assertNotNull("award sheet", workbook.getSheet("award"));
-        Assert.assertNotNull("item sheet", workbook.getSheet("item"));
+        Assert.assertNotNull("item sheet", workbook.getSheet("usaitem"));
         Assert.assertNotNull("contract sheet", workbook.getSheet("contract"));
 
         Assert.assertEquals("release id", "ocds-213czf-000-00001-01-planning", workbook.getSheet("release").getRow(3).getCell(0).toString());
@@ -46,7 +46,7 @@ public class ReleaseExportFileTest {
 
         Assert.assertEquals("award number of rows", 4, workbook.getSheet("award").getLastRowNum());
 
-        Assert.assertEquals("item number of rows", 9, workbook.getSheet("item").getLastRowNum());
+        Assert.assertEquals("item number of rows", 9, workbook.getSheet("usaitem").getLastRowNum());
 
         Assert.assertEquals("contract flatten organizatio id", "E09000003 | E09000003", workbook.getSheet("contract").getRow(2).getCell(17).toString());
     }
