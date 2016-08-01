@@ -191,9 +191,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
-        // organizationaltype  - awards.supplier.additionalIdentifiers
-        // forPattern("response/result/doc/organizationaltype").setBeanProperty().withName("id");
-
         forPattern("response/result/doc/faxno")
                 .addRule(new Rule() {
                     @Override
@@ -394,9 +391,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
-        // congressionaldistrict - award:suppliers:address:congressionalDistrict
-        // forPattern("response/result/doc/congressionaldistrict").setBeanProperty().withName("id");
-
         forPattern("response/result/doc/baseandalloptionsvalue")
                 .addRule(new Rule() {
                     @Override
@@ -470,18 +464,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     }
                 });
 
-        // productorservicecode  - items.additionalClassifications
-        // forPattern("response/result/doc/productorservicecode").setBeanProperty().withName("id");
-
-        // placeofmanufacture  - contracts:item:additionalClassifications
-        // forPattern("response/result/doc/placeofmanufacture").setBeanProperty().withName("id");
-
-        // countryoforigin  - contracts:item:additionalClassifications
-        // forPattern("response/result/doc/countryoforigin").setBeanProperty().withName("id");
-
-        // systemequipmentcode  - contracts:item:additionalClassifications
-        // forPattern("response/result/doc/systemequipmentcode").setBeanProperty().withName("id");
-
         forPattern("response/result/doc/reasonformodification")
                 .addRule(new Rule() {
                     @Override
@@ -501,7 +483,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
-
 
         forPattern("response/result/doc/signeddate")
                 .addRule(new Rule() {
@@ -562,9 +543,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
-
-        // ultimatecompletiondate  - contract.period.endDate (actual)
-        // forPattern("response/result/doc/ultimatecompletiondate").setBeanProperty().withName("id");
 
         forPattern("response/result/doc/baseandexercisedoptionsvalue")
                 .addRule(new Rule() {
