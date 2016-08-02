@@ -18,9 +18,11 @@ public interface XMLFile extends ImportService {
      * @throws IOException
      * @throws SAXException
      */
-    void process(final InputStream inputStream) throws IOException, SAXException;
+    void process(final InputStream inputStream, final Boolean purgeDatabase, final Boolean validateData)
+            throws IOException, SAXException;
 
-    void process(final File file) throws IOException, SAXException;
+    void process(final File file, final Boolean purgeDatabase, final Boolean validateData)
+            throws IOException, SAXException;
 
     /**
      * Save a particular release into database.

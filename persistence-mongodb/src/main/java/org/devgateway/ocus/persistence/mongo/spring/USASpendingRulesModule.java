@@ -441,7 +441,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                 .addRule(new Rule() {
                     @Override
                     public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
+                        if (!StringUtils.isEmpty(text) && new BigDecimal(text).compareTo(BigDecimal.ZERO) >= 0) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
                             Award award = getFirstAward(release);

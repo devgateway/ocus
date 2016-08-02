@@ -30,7 +30,7 @@ public class XMLFileImportTest extends AbstractMongoTest {
     public void process() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource("xml/release.xml").getFile());
-        xmlFile.process(file);
+        xmlFile.process(file, false, false);
 
         List<Release> releases = releaseRepository.findAll();
         Assert.assertNotNull(releases);
