@@ -43,9 +43,6 @@ public class USASpendingImportPage extends BasePage {
     private static final long serialVersionUID = 1L;
 
     @SpringBean
-    private ReleaseRepository releaseRepository;
-
-    @SpringBean
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @SpringBean
@@ -118,7 +115,8 @@ public class USASpendingImportPage extends BasePage {
                 target.add(form);
 
                 try {
-                    usaSpendingXMLImport.process(new File("/opt/Data_Feed.xml"));
+                    usaSpendingXMLImport.process(new File("/opt/Data_Feed.xml"),
+                            importForm.getModelObject().getDropData(), importForm.getModelObject().getValidateData());
                 } catch (Exception e) {
                     logger.error(e);
                 } finally {

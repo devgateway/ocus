@@ -101,6 +101,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 procuringEntity = new Organization();
                                 tender.setProcuringEntity(procuringEntity);
                             }
+                            procuringEntity.setName(text);
 
                             Identifier identifier = procuringEntity.getIdentifier();
                             if (identifier == null) {
@@ -440,7 +441,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                 .addRule(new Rule() {
                     @Override
                     public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
+                        if (!StringUtils.isEmpty(text) && new BigDecimal(text).compareTo(BigDecimal.ZERO) >= 0) {
                             // get the object from top of the stack, it should be a Release object
                             Release release = getDigester().peek();
                             Award award = getFirstAward(release);
@@ -472,6 +473,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 item.setClassification(classification);
                             }
                             classification.setId(text);
+                            classification.setScheme("NAICS");
                         }
                     }
                 });
@@ -507,6 +509,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 item.setClassification(classification);
                             }
                             classification.setDescription(text);
+                            classification.setScheme("NAICS");
                         }
                     }
                 });
