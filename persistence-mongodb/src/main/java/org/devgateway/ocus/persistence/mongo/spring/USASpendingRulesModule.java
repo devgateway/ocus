@@ -35,6 +35,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                     // get the object from top of the stack, it should be a Release object
                     Release release = getDigester().peek();
                     release.setOcid(MongoConstants.OCDS_PREFIX + text);
+
+                    // also set the Tag
+                    release.getTag().add(Tag.award);
                 }
             }
         });
@@ -57,6 +60,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
                             if (tender == null) {
                                 tender = new Tender();
+                                tender.setId("tender-" + release.getOcid());
                                 release.setTender(tender);
                             }
 
@@ -87,6 +91,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
                             if (tender == null) {
                                 tender = new Tender();
+                                tender.setId("tender-" + release.getOcid());
                                 release.setTender(tender);
                             }
 
@@ -108,6 +113,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
                             if (tender == null) {
                                 tender = new Tender();
+                                tender.setId("tender-" + release.getOcid());
                                 release.setTender(tender);
                             }
 
@@ -127,6 +133,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
                             if (tender == null) {
                                 tender = new Tender();
+                                tender.setId("tender-" + release.getOcid());
                                 release.setTender(tender);
                             }
 
@@ -664,6 +671,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         if (award == null) {
             award = new Award();
+            award.setId(release.getOcid() + "-award-" + awards.size());
             awards.add(award);
         }
 
@@ -696,6 +704,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         if (contract == null) {
             contract = new Contract();
+            contract.setAwardID(getFirstAward(release).getId());
             contracts.add(contract);
         }
 
@@ -712,6 +721,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         if (item == null) {
             item = new USAItem();
+            item.setId(Integer.toString(items.size()));
             items.add(item);
         }
 
@@ -728,6 +738,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         if (item == null) {
             item = new USAItem();
+            item.setId(Integer.toString(items.size()));
             items.add(item);
         }
 
@@ -744,6 +755,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         if (transaction == null) {
             transaction = new Transaction();
+            transaction.setId(Integer.toString(transactions.size()));
             transactions.add(transaction);
         }
 
