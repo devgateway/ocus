@@ -17,7 +17,7 @@ function getBidTypeDescription(__, {id, description}){
   }
 }
 
-class OCEChild extends OCApp{
+class OCUS extends OCApp{
   constructor(props) {
     super(props);
     this.registerTab(OverviewTab);
@@ -82,7 +82,7 @@ class OCEChild extends OCApp{
   }
 }
 
-ReactDOM.render(<OCEChild/>, document.getElementById('dg-container'));
+ReactDOM.render(<OCUS/>, document.getElementById('dg-container'));
 
 if("ocvn.developmentgateway.org" == location.hostname){
   (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
