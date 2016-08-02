@@ -4,7 +4,22 @@ import org.apache.commons.digester3.Rule;
 import org.apache.commons.digester3.binder.AbstractRulesModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.devgateway.ocds.persistence.mongo.*;
+import org.devgateway.ocds.persistence.mongo.Address;
+import org.devgateway.ocds.persistence.mongo.Amendment;
+import org.devgateway.ocds.persistence.mongo.Amount;
+import org.devgateway.ocds.persistence.mongo.Award;
+import org.devgateway.ocds.persistence.mongo.Classification;
+import org.devgateway.ocds.persistence.mongo.ContactPoint;
+import org.devgateway.ocds.persistence.mongo.Contract;
+import org.devgateway.ocds.persistence.mongo.Identifier;
+import org.devgateway.ocds.persistence.mongo.Implementation;
+import org.devgateway.ocds.persistence.mongo.Item;
+import org.devgateway.ocds.persistence.mongo.Organization;
+import org.devgateway.ocds.persistence.mongo.Period;
+import org.devgateway.ocds.persistence.mongo.Release;
+import org.devgateway.ocds.persistence.mongo.Tag;
+import org.devgateway.ocds.persistence.mongo.Tender;
+import org.devgateway.ocds.persistence.mongo.Transaction;
 import org.devgateway.ocds.persistence.mongo.constants.MongoConstants;
 import org.devgateway.ocus.persistence.mongo.USAItem;
 import org.devgateway.ocus.persistence.mongo.spring.constants.USASpendingConstants;
@@ -42,13 +57,30 @@ public class USASpendingRulesModule extends AbstractRulesModule {
             }
         });
 
+        addBuyerSection();
+
+        addTenderSection();
+
+        addSupplierSection();
+
+        addSupplierAddressSection();
+
+        addAwardSection();
+
+        addContractSection();
+
+        addContractItemSection();
+    }
+
+    private void addBuyerSection() {
         // Buyer
         forPattern("response/result/doc/fundingrequestingagencyid")
                 .createObject().ofType("org.devgateway.ocds.persistence.mongo.Organization")
                 .then().setBeanProperty().withName("name")
                 .then().setNext("setBuyer");
+    }
 
-        // Tender section
+    private void addTenderSection() {
         forPattern("response/result/doc/agencyid")
                 .addRule(new Rule() {
                     @Override
@@ -97,7 +129,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
                             // check OCE-45 for the mapping
                             tender.setProcurementMethod(
-                                    USASpendingConstants.ExtentCompeted.extentCompetedMapping.get(text));
+                                    USASpendingConstants.ExtentCompeted.EXTENTCOMPETEDMAPPING.get(text));
                         }
                     }
                 });
@@ -142,7 +174,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
+    private void addSupplierSection() {
         forPattern("response/result/doc/vendorname")
                 .addRule(new Rule() {
                     @Override
@@ -257,7 +291,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
+    private void addSupplierAddressSection() {
         forPattern("response/result/doc/city")
                 .addRule(new Rule() {
                     @Override
@@ -397,7 +433,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
+    private void addAwardSection() {
         forPattern("response/result/doc/baseandalloptionsvalue")
                 .addRule(new Rule() {
                     @Override
@@ -437,7 +475,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
+    private void addContractSection() {
         forPattern("response/result/doc/piid")
                 .addRule(new Rule() {
                     @Override
@@ -550,7 +590,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
+    private void addContractAmounts() {
         forPattern("response/result/doc/baseandexercisedoptionsvalue")
                 .addRule(new Rule() {
                     @Override
@@ -598,8 +640,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
-
+    private void addContractItemSection() {
         forPattern("response/result/doc/PlaceofPerformanceCity")
                 .addRule(new Rule() {
                     @Override

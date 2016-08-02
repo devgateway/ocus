@@ -28,9 +28,7 @@ public final class ReleaseExportFile implements ExcelFile {
         ExcelSheet releaseSheet = new OCDSObjectExcelSheet(this.workbook, Release.class);
 
         // don't do anything if the list of releases is empty, just display the error message
-        if (releases == null || releases.isEmpty()) {
-            // releaseSheet.emptySheet();
-        } else {
+        if (releases != null && !releases.isEmpty()) {
             releaseSheet.writeSheet(new ArrayList<>(releases));
         }
 
