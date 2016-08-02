@@ -105,8 +105,8 @@ public class OcdsController extends GenericOCDSController {
         releasePackage.setUri(SERVER_DOMAIN + "/api/ocds/package/ocid/" + release.getOcid());
         Publisher publisher = new Publisher();
 
-        publisher.setName("Government of Vietnam: Public Procurement Agency");
-        publisher.setScheme("VN-PPA");
+        publisher.setName("USA GoV");
+        publisher.setScheme("US-GOV");
         publisher.setUid(release.getOcid());
         publisher.setUri(SERVER_DOMAIN);
         releasePackage.setPublisher(publisher);

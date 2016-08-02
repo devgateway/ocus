@@ -101,6 +101,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 procuringEntity = new Organization();
                                 tender.setProcuringEntity(procuringEntity);
                             }
+                            procuringEntity.setName(text);
 
                             Identifier identifier = procuringEntity.getIdentifier();
                             if (identifier == null) {
@@ -472,6 +473,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 item.setClassification(classification);
                             }
                             classification.setId(text);
+                            classification.setScheme("NAICS");
                         }
                     }
                 });
@@ -507,6 +509,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 item.setClassification(classification);
                             }
                             classification.setDescription(text);
+                            classification.setScheme("NAICS");
                         }
                     }
                 });
