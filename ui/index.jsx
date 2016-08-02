@@ -50,9 +50,6 @@ class OCUS extends OCApp{
           {this.comparison()}
           {this.exportBtn()}
         </div>
-        <div className="col-sm-2 language-switcher">
-          {this.languageSwitcher()}
-        </div>
       </header>
       <aside className="col-xs-4 col-md-3 col-lg-2">
         <div className="row">
