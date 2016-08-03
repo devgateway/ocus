@@ -67,9 +67,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         addAwardSection();
 
-        addContractSection();
+        addAwardItemsSection();
 
-        addContractItemSection();
+        addContractSection();
     }
 
     private void addBuyerSection() {
@@ -456,7 +456,9 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+    }
 
+    private void addAwardItemsSection() {
         forPattern("response/result/doc/principalnaicscode")
                 .addRule(new Rule() {
                     @Override
@@ -477,6 +479,87 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+
+        forPattern("response/result/doc/descriptionofcontractrequirement")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            Item item = getFirstItemAward(award);
+
+                            Classification classification = item.getClassification();
+                            if (classification == null) {
+                                classification = new Classification();
+                                item.setClassification(classification);
+                            }
+                            classification.setDescription(text);
+                            classification.setScheme("NAICS");
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/PlaceofPerformanceCity")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            USAItem item = (USAItem) getFirstItemAward(award);
+
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setLocality(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/placeofperformancecountrycode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            USAItem item = (USAItem) getFirstItemAward(award);
+
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setCountryName(text);
+                        }
+                    }
+                });
+
+        forPattern("response/result/doc/placeofperformancezipcode")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+                            USAItem item = (USAItem) getFirstItemAward(award);
+
+                            Address deliveryAddress = item.getDeliveryAddress();
+                            if (deliveryAddress == null) {
+                                deliveryAddress = new Address();
+                                item.setDeliveryAddress(deliveryAddress);
+                            }
+                            deliveryAddress.setPostalCode(text);
+                        }
+                    }
+                });
     }
 
     private void addContractSection() {
@@ -489,27 +572,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             Release release = getDigester().peek();
                             Contract contract = getFirstContract(release);
                             contract.setId(text);
-                        }
-                    }
-                });
-
-        forPattern("response/result/doc/descriptionofcontractrequirement")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Contract contract = getFirstContract(release);
-                            Item item = getFirstItemContract(contract);
-
-                            Classification classification = item.getClassification();
-                            if (classification == null) {
-                                classification = new Classification();
-                                item.setClassification(classification);
-                            }
-                            classification.setDescription(text);
-                            classification.setScheme("NAICS");
                         }
                     }
                 });
@@ -645,68 +707,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                 });
     }
 
-    private void addContractItemSection() {
-        forPattern("response/result/doc/PlaceofPerformanceCity")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Contract contract = getFirstContract(release);
-                            USAItem item = (USAItem) getFirstItemContract(contract);
-
-                            Address deliveryAddress = item.getDeliveryAddress();
-                            if (deliveryAddress == null) {
-                                deliveryAddress = new Address();
-                                item.setDeliveryAddress(deliveryAddress);
-                            }
-                            deliveryAddress.setLocality(text);
-                        }
-                    }
-                });
-
-        forPattern("response/result/doc/placeofperformancecountrycode")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Contract contract = getFirstContract(release);
-                            USAItem item = (USAItem) getFirstItemContract(contract);
-
-                            Address deliveryAddress = item.getDeliveryAddress();
-                            if (deliveryAddress == null) {
-                                deliveryAddress = new Address();
-                                item.setDeliveryAddress(deliveryAddress);
-                            }
-                            deliveryAddress.setCountryName(text);
-                        }
-                    }
-                });
-
-        forPattern("response/result/doc/placeofperformancezipcode")
-                .addRule(new Rule() {
-                    @Override
-                    public void body(String namespace, String name, String text) throws Exception {
-                        if (!StringUtils.isEmpty(text)) {
-                            // get the object from top of the stack, it should be a Release object
-                            Release release = getDigester().peek();
-                            Contract contract = getFirstContract(release);
-                            USAItem item = (USAItem) getFirstItemContract(contract);
-
-                            Address deliveryAddress = item.getDeliveryAddress();
-                            if (deliveryAddress == null) {
-                                deliveryAddress = new Address();
-                                item.setDeliveryAddress(deliveryAddress);
-                            }
-                            deliveryAddress.setPostalCode(text);
-                        }
-                    }
-                });
-    }
-
     private Award getFirstAward(Release release) {
         Award award = null;
         Set<Award> awards = release.getAwards();
@@ -760,23 +760,6 @@ public class USASpendingRulesModule extends AbstractRulesModule {
     private Item getFirstItemAward(Award award) {
         Item item = null;
         Set<Item> items = award.getItems();
-
-        if (items.iterator().hasNext()) {
-            item = items.iterator().next();
-        }
-
-        if (item == null) {
-            item = new USAItem();
-            item.setId(Integer.toString(items.size()));
-            items.add(item);
-        }
-
-        return item;
-    }
-
-    private Item getFirstItemContract(Contract contract) {
-        Item item = null;
-        Set<Item> items = contract.getItems();
 
         if (items.iterator().hasNext()) {
             item = items.iterator().next();
