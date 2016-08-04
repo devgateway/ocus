@@ -492,13 +492,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             Award award = getFirstAward(release);
                             Item item = getFirstItemAward(award);
 
-                            Classification classification = item.getClassification();
-                            if (classification == null) {
-                                classification = new Classification();
-                                item.setClassification(classification);
-                            }
-                            classification.setDescription(text);
-                            classification.setScheme("NAICS");
+                            item.setDescription(text);
                         }
                     }
                 });
