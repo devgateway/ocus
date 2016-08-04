@@ -209,6 +209,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 supplier.setIdentifier(identifier);
                             }
                             identifier.setId(text);
+                            supplier.setId(text);
                         }
                     }
                 });
@@ -476,6 +477,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             }
                             classification.setId(text);
                             classification.setScheme("NAICS");
+                            item.setId(text);
                         }
                     }
                 });
@@ -490,13 +492,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             Award award = getFirstAward(release);
                             Item item = getFirstItemAward(award);
 
-                            Classification classification = item.getClassification();
-                            if (classification == null) {
-                                classification = new Classification();
-                                item.setClassification(classification);
-                            }
-                            classification.setDescription(text);
-                            classification.setScheme("NAICS");
+                            item.setDescription(text);
                         }
                     }
                 });
@@ -707,7 +703,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                 });
     }
 
-    private Award getFirstAward(Release release) {
+    private Award getFirstAward(final Release release) {
         Award award = null;
         Set<Award> awards = release.getAwards();
 
@@ -724,7 +720,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         return award;
     }
 
-    private Organization getFirstSupplier(Award award) {
+    private Organization getFirstSupplier(final Award award) {
         Organization supplier = null;
         Set<Organization> suppliers = award.getSuppliers();
 
@@ -740,7 +736,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         return supplier;
     }
 
-    private Contract getFirstContract(Release release) {
+    private Contract getFirstContract(final Release release) {
         Contract contract = null;
         Set<Contract> contracts = release.getContracts();
 
@@ -757,7 +753,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         return contract;
     }
 
-    private Item getFirstItemAward(Award award) {
+    private Item getFirstItemAward(final Award award) {
         Item item = null;
         Set<Item> items = award.getItems();
 
@@ -774,7 +770,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
         return item;
     }
 
-    private Transaction getFirstTransaction(Implementation implementation) {
+    private Transaction getFirstTransaction(final Implementation implementation) {
         Transaction transaction = null;
         Set<Transaction> transactions = implementation.getTransactions();
 

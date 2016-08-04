@@ -2,8 +2,15 @@ package org.devgateway.ocus.persistence.mongo.spring;
 
 import org.apache.commons.digester3.binder.AbstractRulesModule;
 import org.apache.log4j.Logger;
+import org.devgateway.ocds.persistence.mongo.Award;
+import org.devgateway.ocds.persistence.mongo.Classification;
+import org.devgateway.ocds.persistence.mongo.Item;
+import org.devgateway.ocds.persistence.mongo.Organization;
 import org.devgateway.ocds.persistence.mongo.Release;
 import org.devgateway.ocds.persistence.mongo.reader.XMLFileImport;
+import org.devgateway.ocds.persistence.mongo.repository.ClassificationRepository;
+import org.devgateway.ocds.persistence.mongo.repository.OrganizationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +25,12 @@ import java.io.Serializable;
 public class USASpendingXMLImport extends XMLFileImport implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(USASpendingXMLImport.class);
 
+    @Autowired
+    private OrganizationRepository organizationRepository;
+
+    @Autowired
+    private ClassificationRepository classificationRepository;
+
     private StringBuffer msgBuffer = new StringBuffer();
 
     private long releaseCount;
@@ -25,8 +38,25 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
     private long startTime;
 
     @Override
-    protected Release processRelease(Release release) {
+    protected Release processRelease(final Release release) {
         releaseCount++;
+
+        Organization supplier = null;
+        Item item = null;
+        // get first award
+        Award award = release.getAwards().stream().reduce((a, b) -> a).get();
+        if (award != null) {
+            // get first supplier
+            supplier = award.getSuppliers().stream().reduce((a, b) -> a).get();
+            // get first item
+            item = award.getItems().stream().reduce((a, b) -> a).get();
+        }
+        if (supplier != null) {
+            saveSupplierOrganization(supplier);
+        }
+        if (item != null && item.getClassification() != null) {
+            saveItemClassification(item.getClassification());
+        }
 
         if (startTime == 0) {
             startTime = System.currentTimeMillis();
@@ -40,6 +70,30 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
         }
 
         return release;
+    }
+
+    /**
+     * Save the suppliers in a different mongo collection
+     *
+     * @param supplier
+     */
+    private void saveSupplierOrganization(final Organization supplier) {
+        Organization findSupplier = organizationRepository.findOne(supplier.getId());
+        if (findSupplier == null) {
+            organizationRepository.save(supplier);
+        }
+    }
+
+    /**
+     * Save Item Classification in a different mongo collection
+     *
+     * @param classification
+     */
+    private void saveItemClassification(final Classification classification) {
+        Classification findclassification = classificationRepository.findOne(classification.getId());
+        if (findclassification == null) {
+            classificationRepository.save(classification);
+        }
     }
 
     @Override
