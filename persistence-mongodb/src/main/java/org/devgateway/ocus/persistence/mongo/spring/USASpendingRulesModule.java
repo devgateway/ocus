@@ -457,6 +457,25 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                         }
                     }
                 });
+
+
+        forPattern("response/result/doc/transaction_status")
+                .addRule(new Rule() {
+                    @Override
+                    public void body(String namespace, String name, String text) throws Exception {
+                        if (!StringUtils.isEmpty(text)) {
+                            // get the object from top of the stack, it should be a Release object
+                            Release release = getDigester().peek();
+                            Award award = getFirstAward(release);
+
+                            if (text.equals(USASpendingConstants.AwardStatus.ACTIVE)) {
+                                award.setStatus(Award.Status.active);
+                            } else {
+                                award.setStatus(Award.Status.unsuccessful);
+                            }
+                        }
+                    }
+                });
     }
 
     private void addAwardItemsSection() {

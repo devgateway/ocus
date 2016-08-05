@@ -8,6 +8,10 @@ import org.devgateway.ocds.persistence.mongo.Tender;
  * @since 7/22/16
  */
 public final class USASpendingConstants {
+    public static final class AwardStatus {
+        public static final String ACTIVE = "Active";
+    }
+
     public static final class ExtentCompeted {
         public static final ImmutableMap<String, Tender.ProcurementMethod> EXTENTCOMPETEDMAPPING =
                 new ImmutableMap.Builder<String, Tender.ProcurementMethod>()
