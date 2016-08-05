@@ -16,8 +16,11 @@ import java.util.Properties;
 public final class USASpendingConstants {
     private static final Logger LOGGER = Logger.getLogger(USASpendingConstants.class);
 
+    private static Map<String, String> naicsCodes;
 
-    public static Map<String, String> naicsCodes;
+    private USASpendingConstants() {
+
+    }
 
     public static final class AwardStatus {
         public static final String ACTIVE = "Active";
