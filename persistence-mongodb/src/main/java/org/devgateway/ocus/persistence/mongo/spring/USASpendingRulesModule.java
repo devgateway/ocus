@@ -496,7 +496,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             }
                             classification.setId(text);
                             classification.setScheme("NAICS");
-                            item.setId(text);
+                            classification.setDescription(USASpendingConstants.getNaicsCodeDescription(text));
                         }
                     }
                 });
