@@ -44,12 +44,12 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
         Organization supplier = null;
         Item item = null;
         // get first award
-        Award award = release.getAwards().stream().reduce((a, b) -> a).get();
+        Award award = release.getAwards().stream().findFirst().get();
         if (award != null) {
             // get first supplier
-            supplier = award.getSuppliers().stream().reduce((a, b) -> a).get();
+            supplier = award.getSuppliers().stream().findFirst().get();
             // get first item
-            item = award.getItems().stream().reduce((a, b) -> a).get();
+            item = award.getItems().stream().findFirst().get();
         }
         if (supplier != null) {
             saveSupplierOrganization(supplier);
