@@ -111,6 +111,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-spring</artifactId>
@@ -128,7 +129,6 @@
             <artifactId>wicket-webjars</artifactId>
             <version>${wicket.webjars.version}</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.apache.wicket</groupId>
