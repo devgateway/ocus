@@ -12,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.devgateway.ocds.web.excelcharts.util.CustomChartDataFactory;
 import org.devgateway.ocds.web.excelcharts.util.CustomChartDataFactoryDefault;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,13 +24,18 @@ import java.util.List;
 public class ExcelChartDefault implements ExcelChart {
     private final ChartType type;
 
+    private final String title;
+
     private final List<String> categories;
 
     private final List<List<? extends Number>> values;
 
     private final Workbook workbook;
 
-    public ExcelChartDefault(final ChartType type,
+    private final List<String> seriesTitle;
+
+    public ExcelChartDefault(final String title,
+                             final ChartType type,
                              final List<String> categories,
                              final List<List<? extends Number>> values) {
         for (List<? extends Number> value : values) {
@@ -38,10 +44,12 @@ public class ExcelChartDefault implements ExcelChart {
             }
         }
 
+        this.title = title;
         this.type = type;
         this.categories = categories;
         this.values = values;
         this.workbook = new XSSFWorkbook();
+        this.seriesTitle = new ArrayList<>();
     }
 
     @Override
@@ -53,27 +61,40 @@ public class ExcelChartDefault implements ExcelChart {
         addValues(excelChartSheet);
 
         final CustomChartDataFactory customChartDataFactory = new CustomChartDataFactoryDefault();
-        final CustomChartData data = customChartDataFactory.createChartData(type, "Chart Title");
+        final CustomChartData chartData = customChartDataFactory.createChartData(type, title);
 
         final ChartDataSource<String> categoryDataSource = excelChartSheet.getCategoryChartDataSource();
         final List<ChartDataSource<Number>> valuesDataSource = excelChartSheet.getValuesChartDataSource();
-        for (ChartDataSource<Number> valueDataSource : valuesDataSource) {
-            data.addSeries(categoryDataSource, valueDataSource);
+        for (int i = 0; i < valuesDataSource.size(); i++) {
+            final ChartDataSource<Number> valueDataSource = valuesDataSource.get(i);
+            if (seriesTitle.isEmpty()) {
+                chartData.addSeries(categoryDataSource, valueDataSource);
+            } else {
+                chartData.addSeries(seriesTitle.get(i), categoryDataSource, valueDataSource);
+            }
         }
 
         // we don't have any axis for a pie chart
         if (type.equals(ChartType.pie)) {
-            chart.plot(data);
+            chart.plot(chartData);
         } else {
             // Use a category axis for the bottom axis.
             final ChartAxis bottomAxis = chart.getChartAxisFactory().createCategoryAxis(AxisPosition.BOTTOM);
             final ValueAxis leftAxis = chart.getChartAxisFactory().createValueAxis(AxisPosition.LEFT);
             leftAxis.setCrosses(AxisCrosses.AUTO_ZERO);
 
-            chart.plot(data, bottomAxis, leftAxis);
+            chart.plot(chartData, bottomAxis, leftAxis);
         }
 
         return workbook;
+    }
+
+    @Override
+    public void configureSeriesTitle(final List<String> seriesTitle) {
+        if (values.size() != seriesTitle.size()) {
+            throw new IllegalArgumentException("seriesTitle and values size should match!");
+        }
+        this.seriesTitle.addAll(seriesTitle);
     }
 
     /**
@@ -83,7 +104,9 @@ public class ExcelChartDefault implements ExcelChart {
         final Row row = excelChartSheet.createRow();
         int coll = 0;
         for (String category : categories) {
-            excelChartSheet.writeCell(category, row, coll++);
+            excelChartSheet.writeCell(category, row, coll);
+            excelChartSheet.setColumnWidth(coll, 3500);
+            coll++;
         }
     }
 

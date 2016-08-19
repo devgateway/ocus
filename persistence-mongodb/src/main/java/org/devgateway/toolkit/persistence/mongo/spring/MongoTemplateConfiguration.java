@@ -28,9 +28,10 @@ public class MongoTemplateConfiguration {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public void createMandatoryImportIndexes() {
+    public void createMandatoryImportIndexes() {    	
         //mongoTemplate.indexOps(Release.class).ensureIndex(new Index().on("planning.budget.projectID", Direction.ASC));
         //mongoTemplate.indexOps(Location.class).ensureIndex(new Index().on("description", Direction.ASC));
+    	logger.info("Added mandatory Mongo indexes");
     }
 
     @PostConstruct
@@ -67,7 +68,7 @@ public class MongoTemplateConfiguration {
                 .ensureIndex(new Index().on("additionalIdentifiers._id", Direction.ASC));
         mongoTemplate.indexOps(Organization.class)
                 .ensureIndex(new TextIndexDefinitionBuilder().onField("name").onField("id").build());
-
+        mongoTemplate.indexOps(Organization.class).ensureIndex(new Index().on("types", Direction.ASC));
 
         logger.info("Added extra Mongo indexes");
 
