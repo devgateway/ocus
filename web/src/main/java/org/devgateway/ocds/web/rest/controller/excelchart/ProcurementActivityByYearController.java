@@ -1,13 +1,7 @@
 package org.devgateway.ocds.web.rest.controller.excelchart;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-
+import com.mongodb.DBObject;
+import io.swagger.annotations.ApiOperation;
 import org.devgateway.ocds.web.excelcharts.ChartType;
 import org.devgateway.ocds.web.rest.controller.CountPlansTendersAwardsController;
 import org.devgateway.ocds.web.rest.controller.GenericOCDSController;
@@ -19,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mongodb.DBObject;
-
-import io.swagger.annotations.ApiOperation;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author idobre
@@ -44,7 +41,7 @@ public class ProcurementActivityByYearController extends GenericOCDSController {
     @RequestMapping(value = "/api/ocds/procurementActivityExcelChart", method = {RequestMethod.GET, RequestMethod.POST})
     public void procurementActivityExcelChart(@ModelAttribute @Valid final YearFilterPagingRequest filter,
                                               final HttpServletResponse response) throws IOException {
-        final String chartTitle = "procurement activity by year";
+        final String chartTitle = "Procurement activity by year";
 
         // fetch the data that will be displayed in the chart (we have multiple sources for this dashboard)
         final List<DBObject> countAwardsByYear = countPlansTendersAwardsController.countAwardsByYear(filter);
