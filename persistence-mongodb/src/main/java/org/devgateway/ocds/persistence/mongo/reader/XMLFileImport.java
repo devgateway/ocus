@@ -6,7 +6,7 @@ import org.apache.commons.digester3.binder.DigesterLoader;
 import org.apache.log4j.Logger;
 import org.devgateway.ocds.persistence.mongo.Release;
 import org.devgateway.ocds.persistence.mongo.repository.ReleaseRepository;
-import org.devgateway.ocds.persistence.mongo.spring.OcdsSchemaValidation;
+import org.devgateway.ocds.persistence.mongo.spring.OcdsSchemaValidatorService;
 import org.devgateway.toolkit.persistence.mongo.spring.MongoTemplateConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -43,7 +43,7 @@ public abstract class XMLFileImport implements XMLFile {
     private MongoTemplateConfiguration mongoTemplateConfiguration;
 
     @Autowired
-    private OcdsSchemaValidation validationService;
+    private OcdsSchemaValidatorService validationService;
 
     @Autowired(required = false)
     private CacheManager cacheManager;
