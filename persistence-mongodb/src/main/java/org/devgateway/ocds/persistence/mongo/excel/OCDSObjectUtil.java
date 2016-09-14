@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
+import org.devgateway.ocds.persistence.mongo.DefaultLocation;
 import org.devgateway.ocds.persistence.mongo.Item;
+import org.devgateway.ocds.persistence.mongo.Location;
 import org.devgateway.ocds.persistence.mongo.Release;
 import org.devgateway.ocds.persistence.mongo.excel.annotation.ExcelExportSepareteSheet;
 import org.devgateway.ocds.persistence.mongo.info.ClassFields;
@@ -170,6 +172,7 @@ public final class OCDSObjectUtil {
      *      .put(Budget.class, VNBudget.class)
      */
     public static final ImmutableMap<Class, Class> INHERITEDOCDSOBJECTS = new ImmutableMap.Builder<Class, Class>()
+            .put(Location.class, DefaultLocation.class)
             .put(Item.class, USAItem.class)
             .build();
 }
