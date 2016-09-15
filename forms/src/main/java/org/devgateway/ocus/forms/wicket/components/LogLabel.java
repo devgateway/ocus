@@ -91,7 +91,7 @@ public abstract class LogLabel extends Label implements IAjaxIndicatorAware {
         add(selfUpdatingBehavior);
     }
 
-    protected abstract void onPostProcessTarget(final AjaxRequestTarget target);
+    protected abstract void onPostProcessTarget(AjaxRequestTarget target);
 
     public AjaxSelfUpdatingTimerBehavior getSelfUpdatingBehavior() {
         return selfUpdatingBehavior;
