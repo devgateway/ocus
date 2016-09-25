@@ -11,9 +11,11 @@ import org.devgateway.ocds.persistence.mongo.Award;
 import org.devgateway.ocds.persistence.mongo.Classification;
 import org.devgateway.ocds.persistence.mongo.ContactPoint;
 import org.devgateway.ocds.persistence.mongo.Contract;
+import org.devgateway.ocds.persistence.mongo.DefaultLocation;
 import org.devgateway.ocds.persistence.mongo.Identifier;
 import org.devgateway.ocds.persistence.mongo.Implementation;
 import org.devgateway.ocds.persistence.mongo.Item;
+import org.devgateway.ocds.persistence.mongo.Location;
 import org.devgateway.ocds.persistence.mongo.Organization;
 import org.devgateway.ocds.persistence.mongo.Period;
 import org.devgateway.ocds.persistence.mongo.Release;
@@ -23,10 +25,12 @@ import org.devgateway.ocds.persistence.mongo.Transaction;
 import org.devgateway.ocds.persistence.mongo.constants.MongoConstants;
 import org.devgateway.ocus.persistence.mongo.USAItem;
 import org.devgateway.ocus.persistence.mongo.spring.constants.USASpendingConstants;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -572,6 +576,21 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                                 item.setDeliveryAddress(deliveryAddress);
                             }
                             deliveryAddress.setPostalCode(text);
+
+                            // try to determine the coordinates based on zipcode
+                            String zipcode = text.substring(0, Math.min(text.length(), 5));
+                            Location location = item.getDeliveryLocation();
+                            if (location == null) {
+                                location = new DefaultLocation();
+                                item.setDeliveryLocation((DefaultLocation) location);
+                            }
+                            List<Double> coordinates = USASpendingConstants.getZipcodeCoordinates(zipcode);
+                            if (coordinates != null && coordinates.size() == 2) {
+                                GeoJsonPoint geoJsonPoint = new GeoJsonPoint(coordinates.get(0), coordinates.get(1));
+                                location.setGeometry(geoJsonPoint);
+                            } else {
+                                LOGGER.warn("Didn't find coordinates for the following zipcode: " + zipcode);
+                            }
                         }
                     }
                 });
