@@ -5,7 +5,9 @@ import org.apache.log4j.Logger;
 import org.devgateway.ocds.persistence.mongo.Tender;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -17,6 +19,8 @@ public final class USASpendingConstants {
     private static final Logger LOGGER = Logger.getLogger(USASpendingConstants.class);
 
     private static Map<String, String> naicsCodes;
+
+    private static Map<String, List<Double>> zipCodesCoordinates;
 
     private USASpendingConstants() {
 
@@ -57,5 +61,34 @@ public final class USASpendingConstants {
         }
 
         return naicsCodes.get(code);
+    }
+
+    public static List<Double> getZipcodeCoordinates(String zipcode) {
+        // read the codes from the properties file
+        if (zipCodesCoordinates == null) {
+            zipCodesCoordinates = new HashMap<>();
+
+            Properties props = new Properties();
+            try {
+                props.load(USASpendingConstants.class.getResourceAsStream("us-zip-codes.properties"));
+            } catch (IOException e) {
+                LOGGER.error(e);
+            }
+
+            for (Object obj : props.keySet()) {
+                String key = obj.toString();
+                String value = props.getProperty(key);
+
+                // get latitude and longitude
+                String[] coordinatesArray = value.split(",");
+                List<Double> coordinates = new ArrayList<>();
+                coordinates.add(Double.parseDouble(coordinatesArray[0]));
+                coordinates.add(Double.parseDouble(coordinatesArray[1]));
+
+                zipCodesCoordinates.put(key, coordinates);
+            }
+        }
+
+        return zipCodesCoordinates.get(zipcode);
     }
 }
