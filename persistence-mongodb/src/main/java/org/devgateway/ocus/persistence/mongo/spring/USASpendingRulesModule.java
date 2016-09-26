@@ -103,6 +103,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
                             Organization procuringEntity = tender.getProcuringEntity();
                             if (procuringEntity == null) {
                                 procuringEntity = new Organization();
+                                procuringEntity.getTypes().add(Organization.OrganizationType.procuringEntity);
                                 tender.setProcuringEntity(procuringEntity);
                             }
                             procuringEntity.setName(text);
@@ -768,6 +769,7 @@ public class USASpendingRulesModule extends AbstractRulesModule {
 
         if (supplier == null) {
             supplier = new Organization();
+            supplier.getTypes().add(Organization.OrganizationType.supplier);
             suppliers.add(supplier);
         }
 
