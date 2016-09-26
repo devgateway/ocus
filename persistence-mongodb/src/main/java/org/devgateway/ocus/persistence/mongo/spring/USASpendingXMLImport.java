@@ -42,6 +42,7 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
         releaseCount++;
 
         Organization supplier = null;
+        Organization procuringEntity = null;
         Item item = null;
         // get first award
         Award award = release.getAwards().stream().findFirst().get();
@@ -51,8 +52,15 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
             // get first item
             item = award.getItems().stream().findFirst().get();
         }
+        if (release.getTender() != null && release.getTender().getProcuringEntity() != null) {
+            procuringEntity = release.getTender().getProcuringEntity();
+        }
+
         if (supplier != null) {
-            saveSupplierOrganization(supplier);
+            saveOrganization(supplier, Organization.OrganizationType.supplier);
+        }
+        if (procuringEntity != null) {
+            saveOrganization(procuringEntity, Organization.OrganizationType.procuringEntity);
         }
         if (item != null && item.getClassification() != null) {
             saveItemClassification(item.getClassification());
@@ -75,12 +83,14 @@ public class USASpendingXMLImport extends XMLFileImport implements Serializable 
     /**
      * Save the suppliers in a different mongo collection
      *
-     * @param supplier
+     * @param organization
+     * @param type
      */
-    private void saveSupplierOrganization(final Organization supplier) {
-        Organization findSupplier = organizationRepository.findOne(supplier.getId());
-        if (findSupplier == null) {
-            organizationRepository.save(supplier);
+    private void saveOrganization(final Organization organization, final Organization.OrganizationType type) {
+        Organization findOrganization = organizationRepository.findByIdOrNameAndTypes(organization.getName(), type);
+        // Organization findOrganization = organizationRepository.findByIdOrName(organization.getName());
+        if (findOrganization == null) {
+            organizationRepository.save(organization);
         }
     }
 
