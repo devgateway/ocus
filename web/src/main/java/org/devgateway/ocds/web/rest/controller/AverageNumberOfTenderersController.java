@@ -11,14 +11,23 @@
  *******************************************************************************/
 package org.devgateway.ocds.web.rest.controller;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import io.swagger.annotations.ApiOperation;
-import org.devgateway.ocds.web.rest.controller.request.DefaultFilterPagingRequest;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
+import java.util.List;
+
+import javax.validation.Valid;
+
+import org.devgateway.ocds.web.rest.controller.request.YearFilterPagingRequest;
 import org.devgateway.toolkit.persistence.mongo.aggregate.CustomProjectionOperation;
+import org.devgateway.toolkit.persistence.mongo.aggregate.CustomSortingOperation;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
@@ -27,17 +36,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-import java.util.List;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import io.swagger.annotations.ApiOperation;
 
 /**
  *
@@ -60,7 +62,7 @@ public class AverageNumberOfTenderersController extends GenericOCDSController {
 
     @RequestMapping(value = "/api/averageNumberOfTenderers",
             method = { RequestMethod.POST, RequestMethod.GET }, produces = "application/json")
-    public List<DBObject> averageNumberOfTenderers(@ModelAttribute @Valid final DefaultFilterPagingRequest filter) {
+    public List<DBObject> averageNumberOfTenderers(@ModelAttribute @Valid final YearFilterPagingRequest filter) {
 
         DBObject project = new BasicDBObject();
         project.put("year", new BasicDBObject("$year", "$tender.tenderPeriod.startDate"));
@@ -68,13 +70,13 @@ public class AverageNumberOfTenderersController extends GenericOCDSController {
 
         Aggregation agg = newAggregation(
                 match(where("tender.numberOfTenderers").gt(0).and("tender.tenderPeriod.startDate").exists(true)
-                        .andOperator(getDefaultFilterCriteria(filter))),
+                        .andOperator(getYearDefaultFilterCriteria(filter, "tender.tenderPeriod.startDate"))),
                 new CustomProjectionOperation(project),
                 group("$year").avg("tender.numberOfTenderers").as(Keys.AVERAGE_NO_OF_TENDERERS),
                 project(Fields.from(Fields.field("year", Fields.UNDERSCORE_ID_REF)))
                         .andInclude(Keys.AVERAGE_NO_OF_TENDERERS)
                         .andExclude(Fields.UNDERSCORE_ID),
-                sort(Direction.ASC, Keys.YEAR),
+                new CustomSortingOperation(new BasicDBObject(Keys.YEAR, 1)),
                 skip(filter.getSkip()), limit(filter.getPageSize()));
 
         AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, "release", DBObject.class);

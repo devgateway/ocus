@@ -10,14 +10,15 @@
  * Development Gateway - initial API and implementation
  *******************************************************************************/
 /**
- * 
+ *
  */
 package org.devgateway.toolkit.persistence.dao;
 
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import org.devgateway.toolkit.persistence.dao.categories.Group;
+import org.devgateway.toolkit.persistence.dao.categories.Role;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -26,12 +27,10 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-
-import org.devgateway.toolkit.persistence.dao.categories.Group;
-import org.devgateway.toolkit.persistence.dao.categories.Role;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.envers.Audited;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author mpostelnicu
@@ -42,143 +41,143 @@ import org.hibernate.envers.Audited;
 @Audited
 public class TestForm extends AbstractAuditableEntity implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private String textField;
+    private String textField;
 
-	@Column(length = DBConstants.MAX_DEFAULT_TEXT_LENGTH)
-	private String textArea;
+    @Column(length = DBConstants.MAX_DEFAULT_TEXT_LENGTH)
+    private String textArea;
 
-	@Column(length = DBConstants.MAX_DEFAULT_TEXT_LENGTH)
-	private String summernote;
+    @Column(length = DBConstants.MAX_DEFAULT_TEXT_LENGTH)
+    private String summernote;
 
-	private Boolean checkbox;
+    private Boolean checkbox;
 
-	private Boolean checkboxPicker;
+    private Boolean checkboxPicker;
 
-	private Boolean checkboxToggle;
+    private Boolean checkboxToggle;
 
-	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	@ManyToOne
-	private Group entitySelect;
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @ManyToOne
+    private Group entitySelect;
 
-	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	@ManyToMany
-	private List<Role> entityMultiSelect;
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @ManyToMany
+    private List<Role> entityMultiSelect;
 
-	private Date date;
+    private Date date;
 
-	private Date dateTime;
+    private Date dateTime;
 
-	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	@ManyToOne
-	private Group preloadedEntitySelect;
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @ManyToOne
+    private Group preloadedEntitySelect;
 
-	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-	private Set<FileMetadata> fileInput;
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<FileMetadata> fileInput;
 
-	public TestForm() {
-	}
+    public TestForm() {
+    }
 
-	@Override
-	public AbstractAuditableEntity getParent() {
-		return null;
-	}
+    @Override
+    public AbstractAuditableEntity getParent() {
+        return null;
+    }
 
-	public String getTextField() {
-		return textField;
-	}
+    public String getTextField() {
+        return textField;
+    }
 
-	public void setTextField(final String textField) {
-		this.textField = textField;
-	}
+    public void setTextField(final String textField) {
+        this.textField = textField;
+    }
 
-	public String getTextArea() {
-		return textArea;
-	}
+    public String getTextArea() {
+        return textArea;
+    }
 
-	public void setTextArea(final String textArea) {
-		this.textArea = textArea;
-	}
+    public void setTextArea(final String textArea) {
+        this.textArea = textArea;
+    }
 
-	public Boolean getCheckbox() {
-		return checkbox;
-	}
+    public Boolean getCheckbox() {
+        return checkbox;
+    }
 
-	public void setCheckbox(final Boolean checkbox) {
-		this.checkbox = checkbox;
-	}
+    public void setCheckbox(final Boolean checkbox) {
+        this.checkbox = checkbox;
+    }
 
-	public Group getEntitySelect() {
-		return entitySelect;
-	}
+    public Group getEntitySelect() {
+        return entitySelect;
+    }
 
-	public void setEntitySelect(final Group entitySelect) {
-		this.entitySelect = entitySelect;
-	}
+    public void setEntitySelect(final Group entitySelect) {
+        this.entitySelect = entitySelect;
+    }
 
-	public List<Role> getEntityMultiSelect() {
-		return entityMultiSelect;
-	}
+    public List<Role> getEntityMultiSelect() {
+        return entityMultiSelect;
+    }
 
-	public void setEntityMultiSelect(final List<Role> multiSelect) {
-		this.entityMultiSelect = multiSelect;
-	}
+    public void setEntityMultiSelect(final List<Role> multiSelect) {
+        this.entityMultiSelect = multiSelect;
+    }
 
-	public Date getDate() {
-		return date;
-	}
+    public Date getDate() {
+        return date;
+    }
 
-	public void setDate(final Date date) {
-		this.date = date;
-	}
+    public void setDate(final Date date) {
+        this.date = date;
+    }
 
-	public Set<FileMetadata> getFileInput() {
-		return fileInput;
-	}
+    public Set<FileMetadata> getFileInput() {
+        return fileInput;
+    }
 
-	public void setFileInput(final Set<FileMetadata> fileInput) {
-		this.fileInput = fileInput;
-	}
+    public void setFileInput(final Set<FileMetadata> fileInput) {
+        this.fileInput = fileInput;
+    }
 
-	public Date getDateTime() {
-		return dateTime;
-	}
+    public Date getDateTime() {
+        return dateTime;
+    }
 
-	public void setDateTime(final Date dateTime) {
-		this.dateTime = dateTime;
-	}
+    public void setDateTime(final Date dateTime) {
+        this.dateTime = dateTime;
+    }
 
-	public String getSummernote() {
-		return summernote;
-	}
+    public String getSummernote() {
+        return summernote;
+    }
 
-	public void setSummernote(final String summernote) {
-		this.summernote = summernote;
-	}
+    public void setSummernote(final String summernote) {
+        this.summernote = summernote;
+    }
 
-	public Boolean getCheckboxPicker() {
-		return checkboxPicker;
-	}
+    public Boolean getCheckboxPicker() {
+        return checkboxPicker;
+    }
 
-	public void setCheckboxPicker(final Boolean checkboxPicker) {
-		this.checkboxPicker = checkboxPicker;
-	}
+    public void setCheckboxPicker(final Boolean checkboxPicker) {
+        this.checkboxPicker = checkboxPicker;
+    }
 
-	public Boolean getCheckboxToggle() {
-		return checkboxToggle;
-	}
+    public Boolean getCheckboxToggle() {
+        return checkboxToggle;
+    }
 
-	public void setCheckboxToggle(final Boolean checkboxToggle) {
-		this.checkboxToggle = checkboxToggle;
-	}
+    public void setCheckboxToggle(final Boolean checkboxToggle) {
+        this.checkboxToggle = checkboxToggle;
+    }
 
-	public Group getPreloadedEntitySelect() {
-		return preloadedEntitySelect;
-	}
+    public Group getPreloadedEntitySelect() {
+        return preloadedEntitySelect;
+    }
 
-	public void setPreloadedEntitySelect(final Group preloadedEntitySelect) {
-		this.preloadedEntitySelect = preloadedEntitySelect;
-	}
+    public void setPreloadedEntitySelect(final Group preloadedEntitySelect) {
+        this.preloadedEntitySelect = preloadedEntitySelect;
+    }
 }

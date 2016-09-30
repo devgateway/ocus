@@ -10,7 +10,7 @@
  * Development Gateway - initial API and implementation
  *******************************************************************************/
 /**
- * 
+ *
  */
 package org.devgateway.toolkit.forms.wicket.page;
 
@@ -25,16 +25,16 @@ import org.devgateway.toolkit.forms.security.SecurityConstants;
 @AuthorizeInstantiation(SecurityConstants.Roles.ROLE_USER)
 public class SpringEndpointsPage extends BasePage {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * @param parameters
-	 */
-	public SpringEndpointsPage(final PageParameters parameters) {
-		super(parameters);
-	}
+    /**
+     * @param parameters
+     */
+    public SpringEndpointsPage(final PageParameters parameters) {
+        super(parameters);
+    }
 
 }
