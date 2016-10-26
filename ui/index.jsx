@@ -9,15 +9,7 @@ import {fetchJson} from "./oce/tools";
 import {Map} from "immutable";
 import styles from "./style.less";
 
-function getBidTypeDescription(__, {id, description}){
-  switch(+id){
-    case 12: return __("Unspecified") + " #1";
-    case 15: return __("Unspecified") + " #2";
-    default: return description;
-  }
-}
-
-class OCUS extends OCApp{
+class OCEChild extends OCApp{
   constructor(props) {
     super(props);
     this.registerTab(OverviewTab);
@@ -31,7 +23,7 @@ class OCUS extends OCApp{
     fetchJson('/api/ocds/bidType/all').then(data =>
         this.setState({
           bidTypes: data.reduce((map, datum) =>
-              map.set(datum.id, getBidTypeDescription(this.__.bind(this), datum)), Map())
+              map.set(datum.id, datum.get('description')), Map())
         })
     );
   }
@@ -49,6 +41,9 @@ class OCUS extends OCApp{
           {this.filters()}
           {this.comparison()}
           {this.exportBtn()}
+        </div>
+        <div className="col-sm-2 language-switcher">
+          {this.languageSwitcher()}
         </div>
       </header>
       <aside className="col-xs-4 col-md-3 col-lg-2">
@@ -79,7 +74,7 @@ class OCUS extends OCApp{
   }
 }
 
-ReactDOM.render(<OCUS/>, document.getElementById('dg-container'));
+ReactDOM.render(<OCEChild/>, document.getElementById('dg-container'));
 
 if("ocvn.developmentgateway.org" == location.hostname){
   (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
