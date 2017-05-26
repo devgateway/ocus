@@ -1,42 +1,74 @@
 import translatable from "../../translatable";
 import Component from "../../pure-render-component";
-import InputRange from "react-input-range";
-import IRstyles from "react-input-range/dist/react-input-range.css";
+import RCRange from 'rc-slider/lib/Range'
+import {callFunc} from "../../tools";
+import 'rc-slider/assets/index.css';
 
-const BILLION = 1000000000;
-const MILLION = 1000000;
-const THOUSAND = 1000;
+class FormattedNumberInput extends React.Component{
+  getFormattedValue(){
+    const {value} = this.props;
+    return value && value.toLocaleString();
+  }
 
-let labelFormatter =  number => {
-    if(typeof number == "undefined") return number;
-    if(number >= BILLION) return (number/BILLION).toFixed(2) + "B";
-    if(number >= MILLION) return (number/MILLION).toFixed(2) + "M";
-    if(number >= THOUSAND) return (number/THOUSAND).toFixed(2) + "K";
-    return number.toFixed(2);
-}
+  sendUnformattedValue(e){
+    const value = parseFloat(e.target.value.replace(/,/g, ''));
+    this.props.onChange(value);
+  }
 
-class MultipleSelect extends translatable(Component){
   render(){
-    if(!this.state) return null;
-    let {onUpdate, minValue, maxValue} = this.props;
-    let {min, max} = this.state;
+    const {value, onChange} = this.props;
     return (
-        <section className="field">
-          <header>
-            {this.getTitle()}
-          </header>
-          <section className="options range">
-              <InputRange
-                  minValue={min}
-                  maxValue={max}
-                  value={{min: minValue || min, max: maxValue || max}}
-                  onChange={(_, newVal) => onUpdate(newVal)}
-                  formatLabel={labelFormatter}
-              />
-          </section>
-        </section>
+      <input
+        {...this.props}
+        value={this.getFormattedValue()}
+        onChange={this.sendUnformattedValue.bind(this)}
+      />
     )
   }
 }
 
-export default MultipleSelect;
+class Range extends translatable(Component){
+  render(){
+    if(!this.state) return null;
+    const {min, max} = this.state;
+    const {onUpdate} = this.props;
+    const minValue = this.props.minValue || min;
+    const maxValue = this.props.maxValue || max;
+    return (
+      <section className="field">
+        <header>
+          {this.getTitle()}
+        </header>
+        <section className="options range">
+          <RCRange
+            allowCross={false}
+            min={min}
+            max={max}
+            defaultValue={[min, max]}
+            value={[minValue, maxValue]}
+            onChange={([minValue, maxValue]) => onUpdate({min: minValue, max: maxValue}, {min, max})}
+          />
+        </section>
+        <div className="range-inputs">
+          {this.t('general:range:min')}
+          &nbsp;
+          <FormattedNumberInput
+            className="form-control input-sm"
+            value={minValue}
+            onChange={value => onUpdate({min: value, max: maxValue}, {min, max})}
+          />
+        &nbsp;
+      {this.t('general:range:max')}
+        &nbsp;
+      <FormattedNumberInput
+        className="form-control input-sm"
+        value={maxValue}
+        onChange={value => onUpdate({min: minValue, max: value}, {min, max})}
+      />
+        </div>
+      </section>
+    )
+  }
+}
+
+export default Range;

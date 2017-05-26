@@ -3,14 +3,13 @@
  */
 package org.devgateway.ocds.web.rest.controller.request;
 
-import javax.validation.constraints.Min;
-
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Range;
 
-import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.Min;
 
 /**
- * @author mihai
+ * @author mpostelnicu
  *
  */
 public class GenericPagingRequest {
@@ -21,6 +20,9 @@ public class GenericPagingRequest {
 
     public static final int MAX_REQ_YEAR = 2200;
     public static final int MIN_REQ_YEAR = 1900;
+
+    public static final int MAX_MONTH = 12;
+    public static final int MIN_MONTH = 1;
 
     @Min(0)
     @ApiModelProperty(value = "This is the page number to be displayed. "
@@ -54,7 +56,7 @@ public class GenericPagingRequest {
         this.pageSize = size;
     }
 
-    public Integer getSkip() {
-        return pageNumber * pageSize;
+    public Long getSkip() {
+        return (long) (pageNumber * pageSize);
     }
 }

@@ -8,6 +8,8 @@ import EProcurementTab from './oce/tabs/e-procurement';
 import {fetchJson} from "./oce/tools";
 import {Map} from "immutable";
 import styles from "./style.less";
+import ViewSwitcher from "./oce/switcher.jsx";
+import CorruptionRickDashboard from "./oce/corruption-risk";
 
 class OCEChild extends OCApp{
   constructor(props) {
@@ -23,58 +25,103 @@ class OCEChild extends OCApp{
     fetchJson('/api/ocds/bidType/all').then(data =>
         this.setState({
           bidTypes: data.reduce((map, datum) =>
-              map.set(datum.id, datum.get('description')), Map())
+              map.set(datum.id, datum.description), Map())
         })
     );
   }
 
   render(){
-    return <div className="container-fluid" onClick={_ => this.setState({menuBox: ""})}>
-      <header className="branding row">
-        <div className="col-sm-offset-1 col-sm-4">
-          <h1>
-            {this.__('e-Procurement')}
-            <small>{this.__('Toolkit')}</small>
-          </h1>
-        </div>
-        <div className="col-sm-6 menu">
-          {this.filters()}
-          {this.comparison()}
-          {this.exportBtn()}
-        </div>
-        <div className="col-sm-2 language-switcher">
-          {this.languageSwitcher()}
-        </div>
-      </header>
-      <aside className="col-xs-4 col-md-3 col-lg-2">
-        <div className="row">
-          <div role="navigation">
-            {this.navigation()}
+    return (
+      <div className="container-fluid dashboard-default" onClick={_ => this.setState({menuBox: ""})}>
+        <header className="branding row">
+          <div className="col-sm-offset-1 col-sm-4">
+            {this.dashboardSwitcher()}
           </div>
-          <section className="col-sm-12 description">
-            <h3><strong>{this.__("Toolkit description")}</strong></h3>
-            <p>
-              <small>
-                {this.__("The Procurement M&E Prototype is an interactive platform for analyzing, monitoring, and evaluating information on procurement in Vietnam. All data in the dashboard are collected from the Vietnam Government eProcurement system (eGP).")}
-              </small>
-            </p>
-          </section>
+          <div className="col-sm-6 menu">
+            {this.filters()}
+            {this.comparison()}
+            {this.exportBtn()}
+          </div>
+          <div className="col-sm-2 header-icons user-tools">
+            {this.loginBox()}
+          </div>
+          <div className="col-sm-1 header-icons language-switcher">
+            {this.languageSwitcher()}
+          </div>
+        </header>
+        <aside className="col-xs-4 col-md-3 col-lg-2">
+          <div className="row">
+            <div role="navigation">
+              {this.navigation()}
+            </div>
+            {/*
+            <section className="col-sm-12 description">
+              <h3><strong>{this.t('general:description:title')}</strong></h3>
+              <p>
+                <small>
+                  {this.t('general:description:content')}
+                </small>
+              </p>
+            </section>
+            */}
+          </div>
+        </aside>
+        <div className="col-xs-offset-4 col-md-offset-3 col-lg-offset-2 col-xs-8 col-md-9 col-lg-10">
+          <div className="row">
+            {this.content()}
+          </div>
         </div>
-      </aside>
-      <div className="col-xs-offset-4 col-md-offset-3 col-lg-offset-2 col-xs-8 col-md-9 col-lg-10">
-        <div className="row">
-          {this.content()}
+        {this.showMonths() && <div className="col-xs-offset-4 col-md-offset-3 col-lg-offset-2 col-xs-8 col-md-9 col-lg-10 months-bar" role="navigation">
+        {this.monthsBar()}
+        </div>}
+        <div className="col-xs-offset-4 col-md-offset-3 col-lg-offset-2 col-xs-8 col-md-9 col-lg-10 years-bar" role="navigation">
+          {this.yearsBar()}
         </div>
+        <footer className="col-sm-12 main-footer">&nbsp;</footer>
       </div>
-      <div className="col-xs-offset-4 col-md-offset-3 col-lg-offset-2 col-xs-8 col-md-9 col-lg-10 years-bar" role="navigation">
-        {this.yearsBar()}
-      </div>
-      <footer className="col-sm-12 main-footer">&nbsp;</footer>
-    </div>;
+    );
   }
 }
 
-ReactDOM.render(<OCEChild/>, document.getElementById('dg-container'));
+const translations = {
+  en_US: require('../web/public/languages/en_US.json')
+};
+
+const BILLION = 1000000000;
+const MILLION = 1000000;
+const THOUSAND = 1000;
+const formatNumber = number => number.toLocaleString(undefined, {maximumFractionDigits: 2});
+
+const styling = {
+  charts: {
+    axisLabelColor: "#cc3c3b",
+    traceColors: ["#234e6d", "#3f7499", "#80b1d3", "#afd5ee", "#d9effd"],
+    hoverFormat: ',.2f',
+    hoverFormatter: number => {
+      if(typeof number == "undefined") return number;
+      let abs = Math.abs(number);
+      if(abs >= BILLION) return formatNumber(number/BILLION) + "B";
+      if(abs >= MILLION) return formatNumber(number/MILLION) + "M";
+      if(abs >= THOUSAND) return formatNumber(number/THOUSAND) + "K";
+      return formatNumber(number);
+    }
+  },
+  tables: {
+    currencyFormatter: formatNumber
+  }
+};
+
+OCEChild.TRANSLATIONS = translations;
+
+class OceSwitcher extends ViewSwitcher{}
+
+OceSwitcher.views.default = OCEChild;
+OceSwitcher.views.corruptionRiskDashboard = CorruptionRickDashboard;
+
+ReactDOM.render(<OceSwitcher
+                    translations={translations['en_US']}
+                    styling={styling}
+                />, document.getElementById('dg-container'));
 
 if("ocvn.developmentgateway.org" == location.hostname){
   (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=

@@ -11,7 +11,9 @@
  *******************************************************************************/
 package org.devgateway.toolkit.web.spring;
 
+import org.devgateway.toolkit.persistence.repository.AdminSettingsRepository;
 import org.devgateway.toolkit.persistence.spring.CustomJPAUserDetailsService;
+import org.devgateway.toolkit.web.security.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +24,7 @@ import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,27 +36,30 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 /**
- *
  * @author mpostelnicu This configures the spring security for the Web project.
  *         An
- *
  */
 
 @Configuration
 @Order(2) // this loads the security config after the forms security (if you use
 // them overlayed, it must pick that one first)
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @PropertySource("classpath:allowedApiEndpoints.properties")
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     protected CustomJPAUserDetailsService customJPAUserDetailsService;
 
+    @Autowired
+    protected AdminSettingsRepository adminSettingsRepository;
+
     @Value("${allowedApiEndpoints}")
     private String[] allowedApiEndpoints;
 
     @Value("${roleHierarchy}")
     private String roleHierarchyStringRepresentation;
+
 
     @Bean
     public HttpSessionSecurityContextRepository httpSessionSecurityContextRepository() {
@@ -71,15 +77,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(final WebSecurity web) throws Exception {
         web.ignoring().antMatchers("/", "/home", "/v2/api-docs/**", "/swagger-ui.html**", "/webjars/**", "/images/**",
-                "/configuration/**", "/swagger-resources/**", "/dashboard").antMatchers(allowedApiEndpoints);
+                "/configuration/**", "/swagger-resources/**", "/dashboard", "/languages/**", "/isAuthenticated",
+                "/wicket/resource/**/*.ttf", "/wicket/resource/**/*.woff",
+                SecurityUtil.getDisabledApiSecurity(adminSettingsRepository) ? "/api/**" : "/",
+                "/wicket/resource/**/*.woff2", "/wicket/resource/**/*.css.map"
+        ).antMatchers(allowedApiEndpoints);
 
     }
+
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .expressionHandler(webExpressionHandler()) // inject role hierarchy
-                .anyRequest().authenticated().and().formLogin().loginPage("/login").permitAll().and()
+                .anyRequest().authenticated().and().formLogin().
+                loginPage("/login").
+                permitAll().and().requestCache().and()
                 .logout().permitAll().and().sessionManagement().and().csrf().disable();
         http.addFilter(securityContextPersistenceFilter());
     }

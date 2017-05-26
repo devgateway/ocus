@@ -3,7 +3,7 @@
 
 .content{
   margin-top: 3em;
-  margin-bottom: 64px;
+  margin-bottom: 96px;
 }
 
 .container-fluid{
@@ -50,12 +50,26 @@ header.branding{
     }
   }
 
-  .language-switcher{
+  .header-icons.user-tools{
+    font-size: 1em;
+    .glyphicon {
+      color: #f0f0f0;
+    }
+    a{
+      color: white;
+      text-transform: uppercase;
+      &, :hover{
+        text-decoration: none;
+      }
+    }
+  }
+
+  .header-icons{
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    .flag {
+    .icon {
       box-shadow: 0px 1px 10px 1px #B53636;
       -webkit-box-shadow: 0px 1px 10px 1px #B53636;
       -moz-box-shadow: 0px 1px 10px 1px #B53636;
@@ -98,15 +112,18 @@ aside {
   }
 }
 
-.years-bar {
+@yearsBarBottom: 34px;
+@yearsBarHeight: 30px;
+
+.years-bar, .months-bar {
   position: fixed;
-  bottom: 34px;
+  bottom: @yearsBarBottom;
   border-bottom: 2px solid #c5c5c5;
-  z-index: 1;
+  z-index: 10000;
   padding-left: 0;
   padding-right: 0;
   display: table;
-  height: 30px;
+  height: @yearsBarHeight;
   a {
     display: table-cell;
     background-color: #e6e6e6;
@@ -131,6 +148,25 @@ aside {
       }
     }
   }
+
+  .ctrl-click-hint{
+    display: none;
+    position: absolute;
+    top: @yearsBarHeight + 10;
+    color: #fff;
+  }
+
+  a:last-child .ctrl-click-hint{
+    right: 10px;
+  }
+
+  a:hover .ctrl-click-hint{
+    display: block;
+  }
+}
+
+.months-bar{
+  bottom: @yearsBarBottom + @yearsBarHeight + 1;
 }
 
 footer.main-footer{
@@ -191,7 +227,7 @@ aside [role=navigation] a{
   margin-top: 64px;
   padding-right: 0;
   overflow: hidden;
-  &>div{
+  .leaflet-container{
     height: 95vh;
   }
 }
@@ -356,4 +392,14 @@ aside [role=navigation] a{
   .checkbox{
     width: 100%;
   }
+}
+
+.dashboard-name{
+  width: 100px;
+  display: inline-block;
+}
+
+.dashboard-hint{
+  text-transform: none;
+  margin-top: 10px;
 }

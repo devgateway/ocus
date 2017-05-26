@@ -2,14 +2,11 @@ import PureRenderCompoent from "./pure-render-component";
 import translatable from "./translatable";
 import {max, cacheFn, download} from "./tools";
 import {List, Set, Map} from "immutable";
+import orgNamesFetching from "./orgnames-fetching";
 
-let computeUniformYears = cacheFn((Component, comparisonData, years) =>
-    comparisonData.reduce((res, data) =>
-            res.union(Component.computeYears(data))
-        , Set()).intersect(years).sort()
-);
 
-class Comparison extends translatable(PureRenderCompoent){
+
+class Comparison extends orgNamesFetching(translatable(PureRenderCompoent)){
   getComponent(){
     return this.props.Component;
   }
@@ -23,24 +20,36 @@ class Comparison extends translatable(PureRenderCompoent){
     </div>
   }
 
+  getOrgsWithoutNamesIds(){
+    const {comparisonCriteriaValues, compareBy} = this.props;
+    return "procuringEntityId" == compareBy ?
+        comparisonCriteriaValues.filter(id => !this.state.orgNames[id]) :
+        [];
+  }
+
   getTitle(index){
     let {compareBy, bidTypes, comparisonCriteriaValues} = this.props;
     if("bidTypeId" == compareBy){
       return bidTypes.get(comparisonCriteriaValues[index], this.t('general:comparison:other'))
+    } else if("procuringEntityId" == compareBy){
+      const orgId = comparisonCriteriaValues[index];
+      return this.state.orgNames[orgId] || orgId;
     }
     return comparisonCriteriaValues[index] || this.t('general:comparison:other');
   }
 
   render(){
     let {compareBy, comparisonData, comparisonCriteriaValues, filters, requestNewComparisonData, years, width
-        , translations, styling} = this.props;
+        , translations, styling, monthly, months} = this.props;
     if(!comparisonCriteriaValues.length) return null;
     let Component = this.getComponent();
     let decoratedFilters = this.constructor.decorateFilters(filters, compareBy, comparisonCriteriaValues);
     let rangeProp, uniformData;
 
     if(comparisonData.count() == comparisonCriteriaValues.length + 1){
-      uniformData = this.constructor.computeUniformData(Component, comparisonData, years);
+      uniformData = monthly ?
+          this.constructor.mkUniformData(Component, 'month', comparisonData, months) :
+          this.constructor.mkUniformData(Component, 'year', comparisonData, years);
 
       let maxValue = uniformData.map(datum =>
           datum.map(Component.getMaxField).reduce(max, 0)
@@ -60,6 +69,7 @@ class Comparison extends translatable(PureRenderCompoent){
         ep: Component.excelEP,
         filters: comparisonFilters,
         years,
+        months,
         t: this.t.bind(this)
       });
       return <div className="col-md-6 comparison" key={index} ref={ref}>
@@ -68,6 +78,8 @@ class Comparison extends translatable(PureRenderCompoent){
             requestNewData={(_, data) => requestNewComparisonData([index], data)}
             data={uniformData.get(index)}
             years={years}
+            monthly={monthly}
+            months={months}
             title={this.getTitle(index)}
             width={width / 2}
             translations={translations}
@@ -89,17 +101,32 @@ class Comparison extends translatable(PureRenderCompoent){
   }
 }
 
+function getInverseFilter(filter){
+  switch(filter){
+    case 'bidTypeId': return 'notBidTypeId';
+    case 'bidSelectionMethod': return 'notBidSelectionMethod';
+    case 'procuringEntityId': return 'notProcuringEntityId';
+  }
+}
+
+/**
+ *
+ * @param Component A visualization or any object that implement `getFillerDatum` method
+ * @param dateName A string associated with the date type, i.e. "month" or "year"
+ * @param comparisonData An array of chart data
+ * @param dates A set of selected dates
+ */
+Comparison.mkUniformData = (Component, dateName, comparisonData, dates) =>
+    comparisonData.map(comparisonDatum => //map each chart data array ...
+        dates.map(date => //...to a mapping of dates, where each element is either...
+            comparisonDatum.find(datum => datum.get(dateName) == date) //the chart datum for the said date
+                || Component.getFillerDatum({[dateName]: +date})) //or a dummy, if no datum for that date can be found
+        .toList()
+    );
+
 Comparison.decorateFilters = cacheFn((filters, compareBy, comparisonCriteriaValues) =>
     List(comparisonCriteriaValues)
         .map(criteriaValue => filters.set(compareBy, criteriaValue))
-        .push(filters.set(compareBy, comparisonCriteriaValues).set('invert', 'true')));
-
-Comparison.computeUniformData = cacheFn((Component, comparisonData, years) =>
-    comparisonData.map(uniformDatum =>
-        uniformDatum.reduce((res, datum) => res.has(+datum.get('year')) ? res.set(+datum.get('year'), datum) : res,
-            computeUniformYears(Component, comparisonData, years).reduce((map, year) => map.set(year, Component.getFillerDatum(year)), Map())
-        ).toList()
-    )
-);
+        .push(filters.set(getInverseFilter(compareBy), comparisonCriteriaValues)));
 
 export default Comparison;

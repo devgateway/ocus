@@ -3,18 +3,26 @@
  */
 package org.devgateway.ocds.web.rest.controller;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import org.apache.commons.lang3.ArrayUtils;
+import org.devgateway.ocds.persistence.mongo.Tender;
 import org.devgateway.ocds.web.rest.controller.request.DefaultFilterPagingRequest;
 import org.devgateway.ocds.web.rest.controller.request.GroupingFilterPagingRequest;
 import org.devgateway.ocds.web.rest.controller.request.YearFilterPagingRequest;
+import org.devgateway.toolkit.persistence.mongo.aggregate.CustomSortingOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -23,20 +31,24 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author mpostelnicu
- *
  */
 public abstract class GenericOCDSController {
 
-    private static final int LAST_DAY = 31;
-
     private static final int LAST_MONTH_ZERO = 11;
+    public static final int BIGDECIMAL_SCALE = 15;
+    public static final int DAY_MS = 86400000;
+
+    public static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
+
 
     protected Map<String, Object> filterProjectMap;
 
@@ -60,6 +72,39 @@ public abstract class GenericOCDSController {
     }
 
     /**
+     * This is used to build the start date filter query when a monthly filter is used.
+     *
+     * @param year
+     * @param month
+     * @return
+     */
+    protected Date getMonthStartDate(final int year, final int month) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, month - 1);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        Date start = cal.getTime();
+        return start;
+    }
+
+    /**
+     * This is used to build the end date filter query when a monthly filter is used.
+     *
+     * @param year
+     * @param month
+     * @return
+     */
+    protected Date getMonthEndDate(final int year, final int month) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.MONTH, month - 1);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        Date end = cal.getTime();
+        return end;
+    }
+
+
+    /**
      * Gets the date of the last date of the year (31.12.year)
      *
      * @param year
@@ -69,10 +114,15 @@ public abstract class GenericOCDSController {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, year);
         cal.set(Calendar.MONTH, LAST_MONTH_ZERO);
-        cal.set(Calendar.DAY_OF_MONTH, LAST_DAY);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
         Date end = cal.getTime();
         return end;
     }
+
+    protected String ref(String field) {
+        return "$" + field;
+    }
+
 
     /**
      * Appends the procuring bid type id for this filter, this will fitler based
@@ -83,6 +133,111 @@ public abstract class GenericOCDSController {
      */
     protected Criteria getBidTypeIdFilterCriteria(final DefaultFilterPagingRequest filter) {
         return createFilterCriteria("tender.items.classification._id", filter.getBidTypeId(), filter);
+    }
+
+    /**
+     * Adds monthly projection operation, when needed, if the
+     * {@link YearFilterPagingRequest#getMonthly()}
+     *
+     * @param filter
+     * @param project
+     * @param field
+     */
+    protected void addYearlyMonthlyProjection(YearFilterPagingRequest filter, DBObject project, String field) {
+        project.put("year", new BasicDBObject("$year", field));
+        if (filter.getMonthly()) {
+            project.put(("month"), new BasicDBObject("$month", field));
+        }
+    }
+
+    protected CustomSortingOperation getSortByYearMonth(YearFilterPagingRequest filter) {
+        DBObject sort = new BasicDBObject();
+        if (filter.getMonthly()) {
+            sort.put("_id.year", 1);
+            sort.put("_id.month", 1);
+        } else {
+            sort.put("year", 1);
+        }
+        return new CustomSortingOperation(sort);
+    }
+
+    /**
+     * Similar to {@link #getSortByYearMonth(YearFilterPagingRequest)} but it can be used
+     * if additional grouping elements are present, besides month and year
+     *
+     * @param filter
+     * @return
+     */
+    protected CustomSortingOperation getSortByYearMonthWhenOtherGroups(YearFilterPagingRequest filter,
+                                                                       String... otherSort) {
+        DBObject sort = new BasicDBObject();
+        if (filter.getMonthly()) {
+            sort.put("_id.year", 1);
+            sort.put("_id.month", 1);
+        } else {
+            sort.put("_id.year", 1);
+        }
+        if (otherSort != null) {
+            Arrays.asList(otherSort).forEach(s -> sort.put(s, 1));
+        }
+        return new CustomSortingOperation(sort);
+    }
+
+
+    protected void addYearlyMonthlyReferenceToGroup(YearFilterPagingRequest filter, DBObject group) {
+        if (filter.getMonthly()) {
+            group.put(Fields.UNDERSCORE_ID, new BasicDBObject("year", "$year").append("month", "$month"));
+        } else {
+            group.put(Fields.UNDERSCORE_ID, "$year");
+        }
+    }
+
+    /**
+     * Returns the grouping fields based on the {@link YearFilterPagingRequest#getMonthly()} setting
+     *
+     * @param filter
+     * @return
+     */
+    protected String[] getYearlyMonthlyGroupingFields(YearFilterPagingRequest filter) {
+        if (filter.getMonthly()) {
+            return new String[]{"$year", "$month"};
+        } else {
+            return new String[]{"$year"};
+        }
+    }
+
+    /**
+     * @param filter
+     * @param extraGroups adds extra groups
+     * @return
+     * @see #getYearlyMonthlyGroupingFields(YearFilterPagingRequest)
+     */
+    protected String[] getYearlyMonthlyGroupingFields(YearFilterPagingRequest filter, String... extraGroups) {
+        return ArrayUtils.addAll(getYearlyMonthlyGroupingFields(filter), extraGroups);
+    }
+
+    protected GroupOperation getYearlyMonthlyGroupingOperation(YearFilterPagingRequest filter) {
+        return group(getYearlyMonthlyGroupingFields(filter));
+    }
+
+    protected ProjectionOperation transformYearlyGrouping(YearFilterPagingRequest filter) {
+        if (filter.getMonthly()) {
+            return project();
+        } else {
+            return project(Fields.from(Fields.field("year", Fields.UNDERSCORE_ID_REF)))
+                    .andExclude(Fields.UNDERSCORE_ID);
+        }
+    }
+
+    protected void addYearlyMonthlyGroupingOperationFirst(YearFilterPagingRequest filter, DBObject group) {
+        group.put("year", new BasicDBObject("$first", "$year"));
+        if (filter.getMonthly()) {
+            group.put("month", new BasicDBObject("$first", "$month"));
+        }
+    }
+
+    protected Criteria getNotBidTypeIdFilterCriteria(final DefaultFilterPagingRequest filter) {
+        return createNotFilterCriteria("tender.items.classification._id", filter.getNotBidTypeId(), filter);
     }
 
 
@@ -112,15 +267,9 @@ public abstract class GenericOCDSController {
         }
         Criteria criteria = where("tender.value.amount");
         if (filter.getMinTenderValue() != null) {
-            if (filter.getInvert()) {
-                criteria = criteria.not();
-            }
             criteria = criteria.gte(filter.getMinTenderValue().doubleValue());
         }
         if (filter.getMaxTenderValue() != null) {
-            if (filter.getInvert()) {
-                criteria = criteria.not();
-            }
             criteria = criteria.lte(filter.getMaxTenderValue().doubleValue());
         }
         return criteria;
@@ -141,27 +290,28 @@ public abstract class GenericOCDSController {
         }
         Criteria criteria = where("awards.value.amount");
         if (filter.getMinAwardValue() != null) {
-            if (filter.getInvert()) {
-                criteria = criteria.not();
-            }
             criteria = criteria.gte(filter.getMinAwardValue().doubleValue());
         }
         if (filter.getMaxAwardValue() != null) {
-            if (filter.getInvert()) {
-                criteria = criteria.not();
-            }
             criteria = criteria.lte(filter.getMaxAwardValue().doubleValue());
         }
         return criteria;
     }
 
-    private <S> Criteria createFilterCriteria(final String filterName, final List<S> filterValues,
+    private <S> Criteria createFilterCriteria(final String filterName, final Set<S> filterValues,
                                               final DefaultFilterPagingRequest filter) {
         if (filterValues == null) {
             return new Criteria();
         }
-        return filter.getInvert() ? where(filterName).not().in(filterValues.toArray())
-                : where(filterName).in(filterValues.toArray());
+        return where(filterName).in(filterValues.toArray());
+    }
+
+    private <S> Criteria createNotFilterCriteria(final String filterName, final Set<S> filterValues,
+                                                 final DefaultFilterPagingRequest filter) {
+        if (filterValues == null) {
+            return new Criteria();
+        }
+        return where(filterName).not().in(filterValues.toArray());
     }
 
     /**
@@ -173,6 +323,38 @@ public abstract class GenericOCDSController {
      */
     protected Criteria getProcuringEntityIdCriteria(final DefaultFilterPagingRequest filter) {
         return createFilterCriteria("tender.procuringEntity._id", filter.getProcuringEntityId(), filter);
+    }
+
+    /**
+     * Adds the filter by electronic submission criteria for tender.submissionMethod.
+     *
+     * @param filter
+     * @return
+     */
+    protected Criteria getElectronicSubmissionCriteria(final DefaultFilterPagingRequest filter) {
+        if (filter.getElectronicSubmission() != null && filter.getElectronicSubmission()) {
+            return where("tender.submissionMethod").is(Tender.SubmissionMethod.electronicSubmission.toString());
+        }
+
+        return new Criteria();
+    }
+
+    /**
+     * Add the filter by flagged
+     *
+     * @param filter
+     * @return
+     */
+    protected Criteria getFlaggedCriteria(final DefaultFilterPagingRequest filter) {
+        if (filter.getFlagged() != null && filter.getFlagged()) {
+            return where("flags.flaggedStats.0").exists(true);
+        }
+
+        return new Criteria();
+    }
+
+    protected Criteria getNotProcuringEntityIdCriteria(final DefaultFilterPagingRequest filter) {
+        return createNotFilterCriteria("tender.procuringEntity._id", filter.getNotProcuringEntityId(), filter);
     }
 
 
@@ -187,10 +369,23 @@ public abstract class GenericOCDSController {
         return createFilterCriteria("awards.suppliers._id", filter.getSupplierId(), filter);
     }
 
+    /**
+     * Appends the procurement method for this filter, this will fitler based
+     * on tender.procurementMethod
+     *
+     * @param filter
+     * @return the {@link Criteria} for this filter
+     */
+    protected Criteria getProcurementMethodCriteria(final DefaultFilterPagingRequest filter) {
+        return createFilterCriteria("tender.procurementMethod", filter.getProcurementMethod(), filter);
+    }
+
     @PostConstruct
     protected void init() {
         Map<String, Object> tmpMap = new HashMap<>();
         tmpMap.put("tender.procuringEntity._id", 1);
+        tmpMap.put("tender.procurementMethod", 1);
+        tmpMap.put("tender.submissionMethod", 1);
         tmpMap.put("awards.suppliers._id", 1);
         tmpMap.put("tender.items.classification._id", 1);
         tmpMap.put("tender.items.deliveryLocation._id", 1);
@@ -209,28 +404,62 @@ public abstract class GenericOCDSController {
             yearCriteria[0] = new Criteria();
         } else {
             yearCriteria = new Criteria[filter.getYear().size()];
-            for (int i = 0; i < filter.getYear().size(); i++) {
-                yearCriteria[i] = where(dateProperty).gte(getStartDate(filter.getYear().get(i)))
-                        .lte(getEndDate(filter.getYear().get(i)));
+            Integer[] yearArray = filter.getYear().toArray(new Integer[0]);
+            for (int i = 0; i < yearArray.length; i++) {
+                yearCriteria[i] = where(dateProperty).gte(getStartDate(yearArray[i]))
+                        .lte(getEndDate(yearArray[i]));
+            }
+            criteria = criteria.orOperator(yearCriteria);
+
+            if (filter.getMonth() != null && filter.getYear().size() == 1) {
+                Integer[] monthArray = filter.getMonth().toArray(new Integer[0]);
+                criteria = new Criteria(); //we reset the criteria because we use only one year
+                Criteria[] monthCriteria = new Criteria[filter.getMonth().size()];
+                for (int i = 0; i < monthArray.length; i++) {
+                    monthCriteria[i] = where(dateProperty).gte(getMonthStartDate(yearArray[0],
+                            monthArray[i]))
+                            .lte(getMonthEndDate(yearArray[0],
+                                    monthArray[i]));
+                }
+                criteria = criteria.orOperator(monthCriteria);
             }
         }
 
-        return filter.getInvert() ? criteria.norOperator(yearCriteria) : criteria.orOperator(yearCriteria);
+//        logger.info("Criteria=" + criteria.getCriteriaObject());
+
+        return criteria;
     }
 
 
     protected Criteria getDefaultFilterCriteria(final DefaultFilterPagingRequest filter) {
-        return new Criteria().andOperator(getBidTypeIdFilterCriteria(filter), getProcuringEntityIdCriteria(filter),
+        return new Criteria().andOperator(
+                getBidTypeIdFilterCriteria(filter),
+                getNotBidTypeIdFilterCriteria(filter),
+                getProcuringEntityIdCriteria(filter),
+                getNotProcuringEntityIdCriteria(filter),
                 getSupplierIdCriteria(filter),
-                getByTenderDeliveryLocationIdentifier(filter), getByTenderAmountIntervalCriteria(filter),
-                getByAwardAmountIntervalCriteria(filter));
+                getProcurementMethodCriteria(filter),
+                getByTenderDeliveryLocationIdentifier(filter),
+                getByTenderAmountIntervalCriteria(filter),
+                getByAwardAmountIntervalCriteria(filter),
+                getFlaggedCriteria(filter),
+                getElectronicSubmissionCriteria(filter));
     }
 
     protected Criteria getYearDefaultFilterCriteria(final YearFilterPagingRequest filter, final String dateProperty) {
-        return new Criteria().andOperator(getBidTypeIdFilterCriteria(filter), getProcuringEntityIdCriteria(filter),
+        return new Criteria().andOperator(
+                getBidTypeIdFilterCriteria(filter),
+                getNotBidTypeIdFilterCriteria(filter),
+                getProcuringEntityIdCriteria(filter),
+                getNotProcuringEntityIdCriteria(filter),
                 getSupplierIdCriteria(filter),
-                getByTenderDeliveryLocationIdentifier(filter), getByTenderAmountIntervalCriteria(filter),
-                getByAwardAmountIntervalCriteria(filter), getYearFilterCriteria(filter, dateProperty));
+                getProcurementMethodCriteria(filter),
+                getByTenderDeliveryLocationIdentifier(filter),
+                getByTenderAmountIntervalCriteria(filter),
+                getByAwardAmountIntervalCriteria(filter),
+                getElectronicSubmissionCriteria(filter),
+                getFlaggedCriteria(filter),
+                getYearFilterCriteria(filter, dateProperty));
     }
 
     protected MatchOperation getMatchDefaultFilterOperation(final DefaultFilterPagingRequest filter) {
