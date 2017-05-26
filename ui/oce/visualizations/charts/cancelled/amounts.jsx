@@ -1,14 +1,6 @@
-import FrontendYearFilterableChart from "../frontend-filterable";
-import {pluckImm} from "../../../tools";
+import FrontendDateFilterableChart from "../frontend-date-filterable";
 
-class CancelledFunding extends FrontendYearFilterableChart{
-  transform(data){
-    return data.map(({_id, totalCancelledTendersAmount}) => ({
-      year: _id,
-      count: totalCancelledTendersAmount
-    }));
-  }
-
+class CancelledFunding extends FrontendDateFilterableChart{
   getData(){
     let data = super.getData();
     if(!data) return [];
@@ -28,14 +20,16 @@ class CancelledFunding extends FrontendYearFilterableChart{
       trace.hoverinfo = "text";
     }
 
-    for(let datum of data){
-      let year = datum.get('year');
-      let count = datum.get('count');
-      trace.x.push(year);
+    data.forEach(datum => {
+      const date = datum.has('month') ?
+          this.t('general:months:' + datum.get('month')) :
+          datum.get('year');
+
+      let count = datum.get('totalCancelledTendersAmount');
+      trace.x.push(date);
       trace.y.push(count);
       if(hoverFormatter) trace.text.push(hoverFormatter(count));
-    }
-
+    });
 
     return [trace];
   }
@@ -43,7 +37,7 @@ class CancelledFunding extends FrontendYearFilterableChart{
   getLayout(){
     return {
       xaxis: {
-        title: this.t('charts:cancelledAmounts:xAxisName'),
+        title: this.props.monthly ? this.t('general:month') : this.t('general:year'),
         type: 'category'
       },
       yaxis: {

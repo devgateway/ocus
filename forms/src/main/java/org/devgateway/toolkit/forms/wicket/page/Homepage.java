@@ -14,9 +14,12 @@
  */
 package org.devgateway.toolkit.forms.wicket.page;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeInstantiation;
+import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
+import org.apache.wicket.markup.html.TransparentWebMarkupContainer;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.devgateway.toolkit.forms.security.SecurityConstants;
+import org.devgateway.toolkit.web.security.SecurityConstants;
 
 /**
  * @author mpostelnicu
@@ -31,6 +34,18 @@ public class Homepage extends BasePage {
      */
     public Homepage(final PageParameters parameters) {
         super(parameters);
+        
+        
+    }
+    
+    @Override
+    protected void onInitialize() {
+        super.onInitialize();
+        TransparentWebMarkupContainer manageUsersPanel = new TransparentWebMarkupContainer("manageUsers");
+        MetaDataRoleAuthorizationStrategy.authorize(manageUsersPanel, Component.RENDER,
+                SecurityConstants.Roles.ROLE_ADMIN);
+        add(manageUsersPanel);
+
     }
 
 }

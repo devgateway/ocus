@@ -11,23 +11,14 @@
  *******************************************************************************/
 package org.devgateway.ocds.web.rest.controller;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-
-import java.util.Arrays;
-import java.util.List;
-
-import javax.validation.Valid;
-
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import io.swagger.annotations.ApiOperation;
+import org.devgateway.ocds.persistence.mongo.constants.MongoConstants;
 import org.devgateway.ocds.web.rest.controller.request.YearFilterPagingRequest;
 import org.devgateway.toolkit.persistence.mongo.aggregate.CustomProjectionOperation;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
@@ -36,10 +27,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import javax.validation.Valid;
+import java.util.Arrays;
+import java.util.List;
 
-import io.swagger.annotations.ApiOperation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  *
@@ -52,7 +49,7 @@ import io.swagger.annotations.ApiOperation;
 public class FundingByLocationController extends GenericOCDSController {
 
     public static final class Keys {
-        public static final String ITEMS_DELIVERY_LOCATION = "items.deliveryLocation";
+        public static final String ITEMS_DELIVERY_LOCATION = "deliveryLocation";
         public static final String TOTAL_TENDERS_AMOUNT = "totalTendersAmount";
         public static final String TENDERS_COUNT = "tendersCount";
         public static final String TOTAL_TENDERS_WITH_START_DATE_AND_LOCATION = "totalTendersWithStartDateAndLocation";
@@ -73,20 +70,24 @@ public class FundingByLocationController extends GenericOCDSController {
 
         DBObject project = new BasicDBObject();
         project.put("tender.items.deliveryLocation", 1);
-        project.put("tender.value.amount", 1);
-        project.put(Keys.YEAR, new BasicDBObject("$year", "$tender.tenderPeriod.startDate"));
+        project.put("tender.value.amount", 1);        
+        addYearlyMonthlyProjection(filter, project, MongoConstants.FieldNames.TENDER_PERIOD_START_DATE_REF);
 
         Aggregation agg = newAggregation(
-                match(where("tender").exists(true).and("tender.tenderPeriod.startDate").exists(true)
-                .andOperator(getYearDefaultFilterCriteria(filter, "tender.tenderPeriod.startDate"))),
+                match(where("tender").exists(true).and(MongoConstants.FieldNames.TENDER_PERIOD_START_DATE).exists(true)
+                        .andOperator(getYearDefaultFilterCriteria(filter,
+                                MongoConstants.FieldNames.TENDER_PERIOD_START_DATE))),
                 new CustomProjectionOperation(project), unwind("$tender.items"),
-                unwind("$tender.items.deliveryLocation"), match(
-                        where("tender.items.deliveryLocation.geometry.coordinates.0").exists(true)),
-                group(Keys.YEAR, "tender." + Keys.ITEMS_DELIVERY_LOCATION).sum("$tender.value.amount")
-                        .as(Keys.TOTAL_TENDERS_AMOUNT).count().as(Keys.TENDERS_COUNT),
-                sort(Direction.ASC, Keys.YEAR)
-                //,skip(filter.getSkip()), limit(filter.getPageSize())
-                );
+                unwind("$tender.items.deliveryLocation"),
+                project(getYearlyMonthlyGroupingFields(filter)).and("tender.value.amount")
+                        .as("tenderAmount")
+                        .and("tender.items.deliveryLocation").as("deliveryLocation"),
+                match(where("deliveryLocation.geometry.coordinates.0").exists(true)),
+                group(getYearlyMonthlyGroupingFields(filter, Keys.ITEMS_DELIVERY_LOCATION))
+                        .sum("tenderAmount").as(Keys.TOTAL_TENDERS_AMOUNT).count().as(Keys.TENDERS_COUNT),
+                getSortByYearMonth(filter)
+        // ,skip(filter.getSkip()), limit(filter.getPageSize())
+        );
 
         AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, "release", DBObject.class);
         List<DBObject> tagCount = results.getMappedResults();
@@ -122,8 +123,9 @@ public class FundingByLocationController extends GenericOCDSController {
                                 100)));
 
         Aggregation agg = newAggregation(
-                match(where("tender.tenderPeriod.startDate").exists(true)
-                        .andOperator(getYearDefaultFilterCriteria(filter, "tender.tenderPeriod.startDate"))),
+                match(where(MongoConstants.FieldNames.TENDER_PERIOD_START_DATE).exists(true)
+                        .andOperator(getYearDefaultFilterCriteria(filter,
+                                MongoConstants.FieldNames.TENDER_PERIOD_START_DATE))),
                 unwind("$tender.items"), new CustomProjectionOperation(project),
                 group(Fields.UNDERSCORE_ID_REF).max("tenderItemsDeliveryLocation").as("hasTenderItemsDeliverLocation"),
                 group().count().as("totalTendersWithStartDate").sum("hasTenderItemsDeliverLocation")

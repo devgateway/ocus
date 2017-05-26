@@ -31,27 +31,35 @@
 }
 
 .options.range{
-  margin-top: 3rem;
+  margin: 3rem auto 15px auto;
   width: 350px;
-  margin-left:auto;
-  margin-right:auto;
-  .InputRange{
-    margin-bottom: 4rem;
-  }
+}
 
-  .InputRange-label{
-    font-size: 2rem;
+.range-inputs{
+  margin-bottom: 10px;
+  width: 375px;
+  margin-left: auto;
+  margin-right: auto;
+  input{
+    width: 150px;
+    display: inline-block;
   }
+}
 
-  .InputRange-sliderContainer:last-child .InputRange-label--value{
-    top: 1rem;
-  }
-
-  .InputRange-label--value{
-    top: -3.6rem;
-  }
-
-  .InputRange-label--min, .InputRange-label--max{
-    display: none;
-  }
+.dashboard-default .dash-switcher-wrapper{
+    cursor: pointer;
+    .glyphicon{
+        font-size: .33em;
+        margin-left: 20px;
+        top: -5px;
+    }
+    .dashboard-switcher{
+        background: #cc3c3b;
+        font-weight: 500;
+        padding: 5px;
+        border-top: 1px dotted white;
+        a{
+            color: white;
+        }
+    }
 }

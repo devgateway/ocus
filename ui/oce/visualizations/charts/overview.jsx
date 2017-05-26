@@ -1,30 +1,39 @@
-import FrontendYearFilterableChart from "./frontend-filterable";
-import {response2obj, pluckImm} from "../../tools";
+import FrontendDateFilterableChart from "./frontend-date-filterable";
+import {yearlyResponse2obj, monthlyResponse2obj, pluckImm} from "../../tools";
 
-class OverviewChart extends FrontendYearFilterableChart{
-  transform([bidplansResponse, tendersResponse, awardsResponse]){
-    let bidplans = response2obj('count', bidplansResponse);
-    let tenders = response2obj('count', tendersResponse);
-    let awards = response2obj('count', awardsResponse);
-    return Object.keys(tenders).map(year => ({
-      year: year,
-      bidplan: bidplans[year],
-      tender: tenders[year],
-      award: awards[year]
+class OverviewChart extends FrontendDateFilterableChart{
+  transform([tendersResponse, awardsResponse]){
+    const monthly = tendersResponse && tendersResponse[0] && tendersResponse[0].month;
+    const response2obj = monthly ? monthlyResponse2obj : yearlyResponse2obj;
+    const tenders = response2obj('count', tendersResponse);
+    const awards = response2obj('count', awardsResponse);
+    const dateKey = monthly ? 'month' : 'year';
+    return Object.keys(tenders).map(date => ({
+      [dateKey]: date,
+      tender: tenders[date],
+      award: awards[date]
     }));
   }
 
+  getRawData(){
+    return super.getData();
+  }
+
   getData(){
-    var data = super.getData();
+    const data = super.getData();
     if(!data) return [];
-    let LINES = {
+    const LINES = {
       award: this.t('charts:overview:traces:award'),
-      bidplan: this.t('charts:overview:traces:bidplan'),
       tender: this.t('charts:overview:traces:tender')
     };
-    let years = data.map(pluckImm('year')).toArray();
+
+    const monthly = data.hasIn([0, 'month']);
+    const dates = monthly ?
+        data.map(pluckImm('month')).map(month => this.t(`general:months:${month}`)).toArray() :
+        data.map(pluckImm('year')).toArray();
+
     return Object.keys(LINES).map((key, index) => ({
-          x: years,
+          x: dates,
           y: data.map(pluckImm(key)).toArray(),
           type: 'scatter',
           name: LINES[key],
@@ -38,7 +47,7 @@ class OverviewChart extends FrontendYearFilterableChart{
   getLayout(){
     return {
       xaxis: {
-        title: this.t('charts:overview:xAxisName'),
+        title: this.props.monthly ? this.t('general:month') : this.t('general:year'),
         type: "category"
       },
       yaxis: {
@@ -49,7 +58,7 @@ class OverviewChart extends FrontendYearFilterableChart{
   }
 }
 
-OverviewChart.endpoints = ['countBidPlansByYear', 'countTendersByYear', 'countAwardsByYear'];
+OverviewChart.endpoints = ['countTendersByYear', 'countAwardsByYear'];
 OverviewChart.excelEP = 'procurementActivityExcelChart';
 
 OverviewChart.getName = t => t('charts:overview:title');

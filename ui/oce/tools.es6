@@ -8,7 +8,7 @@ export var callFunc = funcName => obj => obj[funcName]();
 
 export var pluck = fieldName => obj => obj[fieldName];
 
-export var pluckImm = fieldName => imm => imm.get(fieldName);
+export var pluckImm = (fieldName, ...args) => imm => imm.get(fieldName, ...args);
 
 export var fetchJson = url => fetch(url, {credentials: 'same-origin'}).then(callFunc('json'))
 
@@ -24,10 +24,26 @@ export var toK = number => number >= 1000 ? Math.round(number / 1000) + "K" : nu
 
 export var identity = _ => _;
 
-export let response2obj = (field, arr) => arr.reduce((obj, elem) => {
-  obj[elem._id] = elem[field];
+/**
+ * Takes two strings and an array of objects, returning on object whose keys are the values of the first field and whose
+ * values are the values of the second field. I guess an example would be more clear
+ * fieldsToObj('field1', 'field2', [{
+ *   field1: 'a',
+ *   field2: '1'
+ * }, {
+ *   field1: 'b',
+ *   field2: '2'
+ * }])
+ * // => {a: 1, b: 2}
+ */
+const fieldsToObj = (keyField, valueField, arr) => arr.reduce((obj, elem) => {
+  obj[elem[keyField]] = elem[valueField];
   return obj;
 }, {});
+
+export const yearlyResponse2obj = fieldsToObj.bind(null, 'year');
+
+export const monthlyResponse2obj = fieldsToObj.bind(null, 'month');
 
 var shallowCompArr = (a, b) => a.every((el, index) => el == b[index]);
 
@@ -44,22 +60,35 @@ export var cacheFn = fn => {
 
 export let max = (a, b) => a > b ? a : b;
 
-export let download = ({ep, filters, years, t}) => {
+//takes and URI object and makes a POST request to it's base url and query as payload
+export const send = url => fetch(url.clone().query(""), {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded'
+  },
+  credentials: 'same-origin',
+  body: url.query()
+});
+
+export const isIE = navigator.appName == 'Microsoft Internet Explorer' || !!(navigator.userAgent.match(/Trident/)
+    || navigator.userAgent.match(/rv 11/));
+
+export let download = ({ep, filters, years, months, t}) => {
   let url = new URI(`/api/ocds/${ep}`)
       .addSearch(filters.toJS())
       .addSearch('year', years.toArray())
       //this sin shall be atoned for in the future
       .addSearch('language', localStorage.oceLocale);
-  return fetch(url.clone().query(""), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: url.query()
-  }).then(response => {
+
+  if(years.count() == 1){
+    url = url.addSearch('month', months && months.toJS()).addSearch('monthly', true);
+  }
+
+  return send(url).then(response => {
     let {userAgent} = navigator;
-    let isSafari =  -1 < userAgent.indexOf("Safari") && -1 == userAgent.indexOf("Chrom");//excludes both Chrome and Chromium
-    if(isSafari){
+    let isSafari = -1 < userAgent.indexOf("Safari") && -1 == userAgent.indexOf("Chrom");//excludes both Chrome and Chromium
+
+    if (isSafari || isIE) {
       location.href = url;
       return response;
     }
@@ -75,4 +104,16 @@ export let download = ({ep, filters, years, t}) => {
   }).catch(() => {
     alert(t('export:error'));
   });
-}
+};
+
+export const shallowCopy = original => {
+  let copy = {};
+  Object.keys(original).forEach(key => copy[key] = original[key]);
+  return copy;
+};
+
+export const arrReplace = (a, b, [head, ...tail]) => "undefined" == typeof head ?
+    tail :
+  [a == head ? b : head].concat(arrReplace(a, b, tail));
+
+export const range = (from, to) => from > to ? [] : [from].concat(range(from + 1, to));
